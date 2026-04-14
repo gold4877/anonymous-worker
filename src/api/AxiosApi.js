@@ -19,7 +19,7 @@ const AxiosApi = {
   // 회원가입
   // 요청: { email, password, name }
   // 응답: { success, message, data: null }
-  signUp: async (email, password, name) => {
+  SignUp: async (email, password, name) => {
     return await axios.post(`${BASE_URL}/api/auth/signup`, {
       email,
       password,
