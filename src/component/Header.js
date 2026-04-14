@@ -143,6 +143,7 @@ const OutlineBtn1 = styled.button`
   background: #1d6bf3;
   font-size: 13px;
   font-weight: 500;
+
   color: #fff;
   cursor: pointer;
   white-space: nowrap;
