@@ -1,27 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Modal from "../../component/Modal";
 import Login from "./Login";
 import SignUp from "./SignUp";
 
-const TabRow = styled.div`
-  display: flex;
-  border-bottom: 1px solid #ffffff;
-  margin-bottom: 16px;
-`;
+const AuthModal = ({ open, close, initialTab = "login" }) => {
+  const [tab, setTab] = useState(initialTab);
 
-const Tab = styled.button`
-  flex: 1;
-  padding: 12px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  background: ${(props) => (props.active ? "#1D6BF3" : "transparent")};
-  color: ${(props) => (props.active ? "#FFFFFF" : "#1A1A1A")};
-`;
-
-const AuthModal = ({ open, close }) => {
-  const [tab, setTab] = useState("login");
+  // 모달이 열릴 때마다 initialTab 으로 리셋
+  // 없으면 "로그인" 버튼 눌러도 이전에 열었던 탭이 유지됨
+  useEffect(() => {
+    if (open) setTab(initialTab);
+  }, [open, initialTab]);
 
   return (
     <Modal open={open} close={close} header="">
@@ -41,3 +31,24 @@ const AuthModal = ({ open, close }) => {
 };
 
 export default AuthModal;
+
+// ─── 스타일 ──────────────────────────────────────────────────
+const TabRow = styled.div`
+  display: flex;
+  border-bottom: 1px solid #e1e1e1;
+  margin-bottom: 16px;
+`;
+
+const Tab = styled.button`
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: ${(p) => (p.active ? "#1A1A1A" : "#999999")};
+  border-bottom: ${(p) =>
+    p.active ? "2px solid #1A1A1A" : "2px solid transparent"};
+  transition: all 0.15s;
+`;

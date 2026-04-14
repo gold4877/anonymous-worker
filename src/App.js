@@ -13,8 +13,13 @@ import AuthModal from "./pages/auth/AuthModal";
 
 function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState("login");
 
-  const openAuth = () => setIsAuthOpen(true);
+  // tab: "login" | "signup"
+  const openAuth = (tab = "login") => {
+    setAuthTab(tab);
+    setIsAuthOpen(true);
+  };
   const closeAuth = () => setIsAuthOpen(false);
 
   return (
@@ -23,19 +28,20 @@ function App() {
       <UserStore>
         <Router>
           <Routes>
+            {/* 메인 — 비로그인도 접근 가능 */}
             <Route path="/" element={<MainPage openAuth={openAuth} />} />
 
             {/* 로그인 이후 */}
             <Route element={<Layout openAuth={openAuth} />}>
-              <Route path="/home" element={<MainPage />} />
+              <Route path="/home" element={<MainPage openAuth={openAuth} />} />
               <Route path="/write" element={<WritePostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
           </Routes>
 
-          {/* 로그인 / 회원가입 모달 */}
-          <AuthModal open={isAuthOpen} close={closeAuth} />
+          {/* Router 안에 있어야 useNavigate 사용 가능 */}
+          <AuthModal open={isAuthOpen} close={closeAuth} initialTab={authTab} />
         </Router>
       </UserStore>
     </>
