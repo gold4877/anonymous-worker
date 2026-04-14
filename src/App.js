@@ -3,8 +3,6 @@ import GlobalStyle from "./style/GlobalStyle";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import UserStore from "./context/UserStore";
 import Layout from "./pages/Layout";
-
-// 우리 팀 페이지
 import MainPage from "./pages/MainPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import WritePostPage from "./pages/WritePostPage";
@@ -18,7 +16,7 @@ function App() {
       <UserStore>
         <Router>
           <Routes>
-            {/* 메인 — 비로그인도 접근 가능 (로그인/회원가입은 모달) */}
+            {/* 메인 — 비로그인도 접근 가능 */}
             <Route path="/" element={<MainPage />} />
 
             {/* 로그인 이후 */}
