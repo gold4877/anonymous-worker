@@ -5,11 +5,11 @@ import { UserContext } from "../context/UserStore";
 import Header from "../component/Header";
 import Footer from "../component/Footer";
 
-const Layout = ({ openAuth }) => {
+const Layout = ({ openAuth, searchValue, onSearch }) => {
   const navigate = useNavigate();
   const { loginUser } = useContext(UserContext);
 
-  // 비로그인 상태로 Layout 접근 시 → 메인으로 보내고 로그인 모달 열기
+  // 비로그인 상태로 Layout 접근 시 → 메인으로 + 로그인 모달
   useEffect(() => {
     if (!loginUser) {
       navigate("/");
@@ -19,7 +19,11 @@ const Layout = ({ openAuth }) => {
 
   return (
     <Container>
-      <Header openAuth={openAuth} />
+      <Header
+        openAuth={openAuth}
+        searchValue={searchValue}
+        onSearch={onSearch}
+      />
       <Main>
         <Outlet />
       </Main>
