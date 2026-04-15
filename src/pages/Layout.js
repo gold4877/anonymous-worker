@@ -1,44 +1,131 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { useContext, useEffect } from "react";
-import styled from "styled-components";
+import {
+  Container,
+  StyledSideMenu,
+  UserContainer,
+  UserImage,
+  UserIdAndName,
+  StyledMenuList,
+  StyledMenuItem,
+  MenuIcon,
+  StyledLink,
+  Dummy,
+} from "../style/LayoutStyle";
+import { useState, useContext, useEffect } from "react";
+import { GiHamburgerMenu, GiCancel } from "react-icons/gi";
+import { FiSettings } from "react-icons/fi";
+import { FaHome, FaClipboardList } from "react-icons/fa";
+import { CgProfile } from "react-icons/cg";
 import { UserContext } from "../context/UserStore";
-import Header from "../component/Header";
-import Footer from "../component/Footer";
+import AxiosApi from "../api/AxiosApi";
 
-const Layout = ({ openAuth }) => {
+const Layout = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { loginUser } = useContext(UserContext);
+  const { color, loginUser, handleLogout } = useContext(UserContext);
 
-  // 비로그인 상태로 Layout 접근 시 → 메인으로 보내고 로그인 모달 열기
+  const [member, setMember] = useState(null);
+
+  // 로그인 유저 정보로 회원 상세 조회
   useEffect(() => {
     if (!loginUser) {
       navigate("/");
-      if (openAuth) openAuth("login");
+      return;
     }
+    const getMember = async () => {
+      try {
+        const rsp = await AxiosApi.getUser(loginUser.userId);
+        // mini_project_base 응답: { success, message, data: { userId, email, name, ... } }
+        if (rsp.data.success) {
+          setMember(rsp.data.data);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    getMember();
   }, [loginUser]);
 
+  const onClickLeft = () => setIsMenuOpen(!isMenuOpen);
+
+  const onClickSetting = () => {
+    navigate("/themeSetting");
+    setIsMenuOpen(false);
+  };
+
+  // 로그아웃
+  const onClickLogout = () => {
+    handleLogout();
+    navigate("/");
+  };
+
   return (
-    <Container>
-      <Header openAuth={openAuth} />
-      <Main>
+    <Container color={color}>
+      <header className="mainhead">
+        <div className="hambeger">
+          {isMenuOpen ? (
+            <GiCancel size={32} color="white" onClick={onClickLeft} />
+          ) : (
+            <GiHamburgerMenu size={32} color="white" onClick={onClickLeft} />
+          )}
+        </div>
+        <div className="setting">
+          <FiSettings size={32} color="white" onClick={onClickSetting} />
+        </div>
+
+        <StyledSideMenu
+          isOpen={isMenuOpen}
+          onClick={() => setIsMenuOpen(false)}
+        >
+          <StyledMenuList>
+            {/* 회원 정보 영역 */}
+            <UserContainer>
+              <UserImage
+                src={"http://via.placeholder.com/50"}
+                alt="User"
+              />
+              <UserIdAndName>
+                <span>{member?.name || loginUser?.name}</span>
+                <span style={{ fontSize: "12px", color: "#888" }}>
+                  {member?.email || loginUser?.email}
+                </span>
+              </UserIdAndName>
+            </UserContainer>
+
+            {/* 메뉴 항목 */}
+            <StyledMenuItem>
+              <MenuIcon><FaHome /></MenuIcon>
+              <StyledLink to="/home">Home</StyledLink>
+            </StyledMenuItem>
+
+            <StyledMenuItem>
+              <MenuIcon><FaClipboardList /></MenuIcon>
+              <StyledLink to="/boards">Boards</StyledLink>
+            </StyledMenuItem>
+
+            <StyledMenuItem>
+              <MenuIcon><CgProfile /></MenuIcon>
+              <StyledLink to="/members">Members</StyledLink>
+            </StyledMenuItem>
+
+            {/* 로그아웃 */}
+            <StyledMenuItem
+              style={{ cursor: "pointer", color: "#e74c3c" }}
+              onClick={onClickLogout}
+            >
+              <MenuIcon>🚪</MenuIcon>
+              <span>Logout</span>
+            </StyledMenuItem>
+          </StyledMenuList>
+        </StyledSideMenu>
+      </header>
+
+      <main>
+        <Dummy />
         <Outlet />
-      </Main>
-      <Footer />
+      </main>
     </Container>
   );
 };
 
 export default Layout;
-
-// ─── 스타일 ──────────────────────────────────────────────────
-const Container = styled.div`
-  min-height: 100vh;
-  background: #f2f2f2;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Main = styled.main`
-  flex: 1;
-  width: 100%;
-`;
