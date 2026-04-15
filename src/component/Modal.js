@@ -94,16 +94,16 @@ const ModalStyle = styled.div`
   }
 `;
 
-const Button = styled.button`
-  outline: none;
-  cursor: pointer;
-  margin-right: 10px;
-  border: 0;
-  width: 60px;
-`;
+// const Button = styled.button`
+//   outline: none;
+//   cursor: pointer;
+//   margin-right: 10px;
+//   border: 0;
+//   width: 60px;
+// `;
 
 const Modal = (props) => {
-  const { open, confirm, close, type, header, children } = props;
+  const { open, close, header, children } = props;
 
   return (
     <ModalStyle>
