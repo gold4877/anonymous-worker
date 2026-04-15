@@ -44,10 +44,6 @@ function App() {
               <Route path="/write" element={<WritePostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
 
-              {/* 권한 없는 경우 루트페이지("/")로 이동.
-                (임시로 상단에 isAdmin = true 로 박아놨음,
-                로그인 유저 정보를 받아와서 권한 확인하는 걸로 바꿔야 할 듯)
-                추후 권한 없을 시 아예 보이지 않도록 하는것도 괜찮을듯 합니다. */}
               <Route path="/admin" element={<AdminLayout />}>
                 {/* /admin 접속 시 바로 대시보드로 이동 */}
                 <Route index element={<Navigate to="dashboard" replace />} />
