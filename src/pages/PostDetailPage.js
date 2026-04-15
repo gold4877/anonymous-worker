@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { AiFillHeart, AiOutlineHeart, AiOutlineClockCircle, AiOutlineMessage } from "react-icons/ai";
 import { FiEye } from "react-icons/fi";
 import { IoArrowBack } from "react-icons/io5";
+import AxiosApi from "../api/AxiosApi";
 
 const COLORS = {
   text: "#1A1A1A",
@@ -80,15 +81,55 @@ const PostDetailPage = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
 
-  const post = useMemo(() => {
-    return dummyPosts.find((item) => String(item.postId) === String(postId)) || dummyPosts[0];
-  }, [postId]);
-
+  const [post, setPost] = useState(null);
   const [liked, setLiked] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [comments, setComments] = useState(
     dummyComments.map((c) => ({ ...c, liked: false }))
   );
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const rsp = await AxiosApi.getPost(postId);
+        if (rsp.data.success) {
+          setPost(rsp.data.data);
+        } else {
+          setPost(null);
+        }
+      } catch (e) {
+        console.error(e);
+        setPost(null);
+      }
+    };
+
+    fetchPost();
+  }, [postId]);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const rsp = await AxiosApi.getCommentList(postId);
+        if (rsp.data.success) {
+          setComments(
+            (rsp.data.data || []).map((c) => ({
+              ...c,
+              liked: false,
+              likeCount: c.likeCount || 0,
+            }))
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchComments();
+  }, [postId]);
+
+  if (!post) {
+    return <div>게시글을 불러오는 중이거나 존재하지 않는 글입니다.</div>;
+  }
 
   const displayLikeCount = post.likeCount + (liked ? 1 : 0);
 
