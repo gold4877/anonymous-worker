@@ -1,9 +1,9 @@
 import "./App.css";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import GlobalStyle from "./style/GlobalStyle";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Navigate } from "react-router-dom";
-import UserStore from "./context/UserStore";
+import { Navigate, useNavigate } from "react-router-dom";
+import UserStore, { UserContext } from "./context/UserStore";
 import Layout from "./pages/Layout";
 
 import MainPage from "./pages/MainPage";
@@ -19,8 +19,8 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState("login");
 
-  // 임시 관리자 권한 (테스트 시 true로 설정)
-  const isAdmin = true;
+  // // 임시 관리자 권한 (테스트 시 true로 설정)
+  // const isAdmin = true;
 
   // tab: "login" | "signup"
   const openAuth = (tab = "login") => {
@@ -48,12 +48,7 @@ function App() {
                 (임시로 상단에 isAdmin = true 로 박아놨음,
                 로그인 유저 정보를 받아와서 권한 확인하는 걸로 바꿔야 할 듯)
                 추후 권한 없을 시 아예 보이지 않도록 하는것도 괜찮을듯 합니다. */}
-              <Route
-                path="/admin"
-                element={
-                  isAdmin ? <AdminLayout /> : <Navigate to="/" replace />
-                }
-              >
+              <Route path="/admin" element={<AdminLayout />}>
                 {/* /admin 접속 시 바로 대시보드로 이동 */}
                 <Route index element={<Navigate to="dashboard" replace />} />
 

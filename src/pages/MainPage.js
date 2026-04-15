@@ -1,8 +1,11 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { ButtonContainer, TransBtn } from "../style/ButtonStyle";
 import styled from "styled-components";
+import { useContext } from "react";
+import { UserContext } from "../context/UserStore";
 
 const Home = ({ openAuth }) => {
+  const { loginUser } = useContext(UserContext);
   const navigate = useNavigate();
 
   const onClickBtn = (path) => {
@@ -11,6 +14,25 @@ const Home = ({ openAuth }) => {
 
   return (
     <div>
+      <div>
+        <p>
+          로그인한 유저가 관리자면 admin 이동 버튼이 나타나게 해두었음
+          <br />
+          관리자여부(true/false)는 현재로선 따로 지정할 방법이 없고 DB에서 직접
+          입력해줘야함
+          <br />
+          loginUser.admin 으로 true/false 값 불러올 수 있음
+        </p>
+        {!loginUser.admin && (
+          <button
+            onClick={() => {
+              navigate("/admin");
+            }}
+          >
+            admin 이동
+          </button>
+        )}
+      </div>
       {/* 로그인 / 회원가입 버튼 분리 */}
       <BtnRow>
         <LoginBtn onClick={() => openAuth && openAuth("login")}>
