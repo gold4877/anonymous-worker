@@ -1,0 +1,27 @@
+<svg viewBox="0 0 120 128" xmlns="http://www.w3.org/2000/svg" width="100%" role="img">
+  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">404 logo using number 4</title>
+  <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Minimalist 404 logo design using the number 4 for website topbar</desc>
+  
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="58" fill="var(--color-background-secondary)" opacity="0.2" style="fill:rgb(245, 244, 237);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.2;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  
+  <!-- Outer ring -->
+  <circle cx="60" cy="60" r="58" fill="none" stroke="var(--color-text-primary)" stroke-width="3" style="fill:none;stroke:rgb(20, 20, 19);color:rgb(0, 0, 0);stroke-width:3px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  
+  <!-- Left "4" -->
+  <text x="32" y="75" font-size="52" font-weight="600" font-family="var(--font-sans)" fill="var(--color-text-primary)" text-anchor="middle" style="fill:rgb(20, 20, 19);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Anthropic Sans, sans-serif;font-size:52px;font-weight:600;text-anchor:middle;dominant-baseline:auto">4</text>
+  
+  <!-- Center accent dot -->
+  <circle cx="60" cy="60" r="5" fill="var(--color-text-primary)" opacity="0.8" style="fill:rgb(20, 20, 19);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.8;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  
+  <!-- Right "4" (flipped) -->
+  <g transform="translate(88, 75) scale(-1, 1)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+    <text x="0" y="0" font-size="52" font-weight="600" font-family="var(--font-sans)" fill="var(--color-text-primary)" text-anchor="middle" style="fill:rgb(20, 20, 19);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Anthropic Sans, sans-serif;font-size:52px;font-weight:600;text-anchor:middle;dominant-baseline:auto">4</text>
+  </g>
+  
+  <!-- Small connecting lines -->
+  <g stroke="var(--color-text-secondary)" stroke-width="2.5" opacity="0.6" style="fill:rgb(0, 0, 0);stroke:rgb(61, 61, 58);color:rgb(0, 0, 0);stroke-width:2.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.6;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+    <line x1="45" y1="60" x2="55" y2="60" style="fill:rgb(0, 0, 0);stroke:rgb(61, 61, 58);color:rgb(0, 0, 0);stroke-width:2.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+    <line x1="65" y1="60" x2="75" y2="60" style="fill:rgb(0, 0, 0);stroke:rgb(61, 61, 58);color:rgb(0, 0, 0);stroke-width:2.5px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  </g>
+</svg>
