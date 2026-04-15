@@ -406,7 +406,7 @@ const SignUp = ({ switchToLogin }) => {
                 checked={agree.terms}
                 onChange={(e) => handleSingle("terms", e.target.checked)}
               />
-              이용약관
+              서비스 이용약관 동의
             </CheckboxLabel>
 
             <CheckboxLabel className="required">
@@ -415,7 +415,7 @@ const SignUp = ({ switchToLogin }) => {
                 checked={agree.privacy}
                 onChange={(e) => handleSingle("privacy", e.target.checked)}
               />
-              개인정보 처리방침
+              개인정보 수집 및 이용 동의
             </CheckboxLabel>
 
             <CheckboxLabel className="required">
@@ -424,7 +424,7 @@ const SignUp = ({ switchToLogin }) => {
                 checked={agree.age}
                 onChange={(e) => handleSingle("age", e.target.checked)}
               />
-              만 14세 이상
+              만 14세 이상입니다
             </CheckboxLabel>
 
             <CheckboxLabel className="optional">
@@ -433,7 +433,7 @@ const SignUp = ({ switchToLogin }) => {
                 checked={agree.marketing}
                 onChange={(e) => handleSingle("marketing", e.target.checked)}
               />
-              마케팅 수신 동의
+              마케팅 정보 수신 동의
             </CheckboxLabel>
           </CheckboxWrapper>
 
@@ -458,7 +458,7 @@ const SignUp = ({ switchToLogin }) => {
           <Subtitle>사용할 이메일을 입력해주세요</Subtitle>
 
           <Input
-            placeholder="이메일 주소"
+            placeholder="company@example.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -497,8 +497,8 @@ const SignUp = ({ switchToLogin }) => {
             <div className="active" />
           </StepIndicator>
 
-          <Title>비밀번호 설정</Title>
-          <Subtitle>계정 정보를 입력해주세요</Subtitle>
+          <Title>정보 입력</Title>
+          <Subtitle>닉네임과 비밀번호를 설정해 주세요</Subtitle>
 
           <div style={{ width: "100%" }}>
             <Input
@@ -536,7 +536,7 @@ const SignUp = ({ switchToLogin }) => {
           <div style={{ width: "100%" }}>
             <Input
               type="password"
-              placeholder="비밀번호 확인"
+              placeholder="비밀번호 재입력"
               value={pw2}
               onChange={(e) => setPw2(e.target.value)}
               disabled={loading}
