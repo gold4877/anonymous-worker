@@ -195,35 +195,39 @@ const PostDetailPage = () => {
           
 
           <CommentList>
-            {comments.map((comment) => (
-              <CommentItem key={comment.commentId}>
-                <CommentAuthor>
-                  <CompanyName>{comment.companyName}</CompanyName>
-                  <MaskedId> · {comment.maskedEmail}</MaskedId>
-                </CommentAuthor>
+            {comments.map((comment) => {
+              const isLiked = comment.liked ?? false;
 
-                <CommentText>{comment.content}</CommentText>
+              return (
+                <CommentItem key={comment.commentId}>
+                  <CommentAuthor>
+                    <CompanyName>{comment.companyName}</CompanyName>
+                    <MaskedId> · {comment.maskedEmail}</MaskedId>
+                  </CommentAuthor>
 
-                <CommentMetaRow>
-                  <CommentMeta>
-                    <AiOutlineClockCircle size={13} />
-                    <span>{formatRelativeDate(comment.createdAt)}</span>
-            
-                  </CommentMeta>
+                  <CommentText>{comment.content}</CommentText>
 
-                  <CommentMeta
-                    style={{ cursor: "pointer" }}
-                    onClick={() => onClickCommentLike(comment.commentId)}>
-                    {comment.liked ? (
-                      <AiFillHeart size={13} color="#1D6BF3" />
-                    ) : (
-                      <AiOutlineHeart size={13} />
-                    )}
-                    <span>{comment.likeCount}</span>
-                  </CommentMeta>
-                </CommentMetaRow>
-              </CommentItem>
-            ))}
+                  <CommentMetaRow>
+                    <CommentMeta>
+                      <AiOutlineClockCircle size={13} />
+                      <span>{formatRelativeDate(comment.createdAt)}</span>
+                    </CommentMeta>
+
+                    <CommentMeta
+                      style={{ cursor: "pointer" }}
+                      onClick={() => onClickCommentLike(comment.commentId)}
+                    >
+                      {isLiked ? ( 
+                        <AiFillHeart size={13} color="#1D6BF3" />
+                      ) : (
+                        <AiOutlineHeart size={13} />
+                      )}
+                      <span>{comment.likeCount}</span>
+                    </CommentMeta>
+                  </CommentMetaRow>
+                </CommentItem>
+              );
+            })}
           </CommentList>
         </CommentSection>
       </Container>
