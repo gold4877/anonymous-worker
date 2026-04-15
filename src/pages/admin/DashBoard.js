@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+// useEffect, AxiosApi 추가
+import { useState, useEffect } from "react";
+import AxiosApi from "../../api/AxiosApi";
 import styled from "styled-components";
 import {
   Chart as ChartJS,
@@ -168,6 +170,59 @@ const DashBoard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("users");
 
+  // 게시글 통계 저장할 상태 변수
+  const [stats, setStats] = useState({
+    postTotal: 0,
+    postToday: 0,
+    userTotal: 0,
+    userToday: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // 2. 오늘 날짜 구하기
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const todayStr = `${year}-${month}-${day}`;
+
+        const [postRsp, userRsp] = await Promise.all([
+          AxiosApi.getPostList(),
+          AxiosApi.getUserList(),
+        ]);
+
+        if (postRsp.data.success && userRsp.data.success) {
+          const allPosts = postRsp.data.data || [];
+          const allUsers = userRsp.data.data || [];
+
+          // 3. 오늘 작성된 게시글 필터링
+          const todayPosts = allPosts.filter(
+            (post) => post.createdAt?.split("T")[0] === todayStr,
+          );
+          const todayUsers = allUsers.filter(
+            (user) => user.createdAt?.split("T")[0] === todayStr,
+          );
+
+          setStats({
+            postTotal: allPosts.length,
+            postToday: todayPosts.length,
+            userTotal: allUsers.length,
+            userToday: todayUsers.length,
+          });
+        }
+      } catch (e) {
+        console.error("대시보드 데이터 조회 실패:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -213,11 +268,13 @@ const DashBoard = () => {
           >
             <StatSection>
               <label>전체 가입자 수</label>
-              <span>1,240 명</span>
+              <span>
+                {loading ? "..." : `${stats.userTotal.toLocaleString()} 명`}
+              </span>
             </StatSection>
             <StatSection accent>
               <label>신규 가입자 수</label>
-              <span>+24 명</span>
+              <span>{loading ? "..." : `+${stats.userToday} 명`}</span>
             </StatSection>
           </Card>
 
@@ -227,11 +284,13 @@ const DashBoard = () => {
           >
             <StatSection>
               <label>전체 게시글 수</label>
-              <span>8,520 개</span>
+              <span>
+                {loading ? "..." : `${stats.postTotal.toLocaleString()} 개`}
+              </span>
             </StatSection>
             <StatSection accent>
               <label>신규 게시글 수</label>
-              <span>+156 개</span>
+              <span>{loading ? "..." : `+${stats.postToday} 개`}</span>
             </StatSection>
           </Card>
 
