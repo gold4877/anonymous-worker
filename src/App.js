@@ -8,8 +8,10 @@ import Layout from "./pages/Layout";
 import MainPage from "./pages/MainPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import WritePostPage from "./pages/WritePostPage";
-import AdminPage from "./pages/AdminPage";
+import DashBoard from "./pages/admin/DashBoard";
 import AuthModal from "./pages/auth/AuthModal";
+import UserManagement from "./pages/admin/UserManagement";
+import PostManagement from "./pages/admin/PostManagement";
 
 function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -36,7 +38,9 @@ function App() {
               <Route path="/home" element={<MainPage openAuth={openAuth} />} />
               <Route path="/write" element={<WritePostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/" element={<DashBoard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/posts" element={<PostManagement />} />
             </Route>
           </Routes>
 
