@@ -11,23 +11,15 @@ const Home = ({ openAuth }) => {
 
   return (
     <div>
-      <ButtonContainer>
-        <TransBtn onClick={() => onClickBtn("/members")}>회원 리스트</TransBtn>
-        <TransBtn onClick={() => onClickBtn("/boards")}>게시판</TransBtn>
-        <TransBtn onClick={() => onClickBtn("/themeSetting")}>
-          테마 설정
-        </TransBtn>
-
-        {/* 로그인 / 회원가입 버튼 분리 */}
-        <BtnRow>
-          <LoginBtn onClick={() => openAuth && openAuth("login")}>
-            로그인
-          </LoginBtn>
-          <SignUpBtn onClick={() => openAuth && openAuth("signup")}>
-            회원가입
-          </SignUpBtn>
-        </BtnRow>
-      </ButtonContainer>
+      {/* 로그인 / 회원가입 버튼 분리 */}
+      <BtnRow>
+        <LoginBtn onClick={() => openAuth && openAuth("login")}>
+          로그인
+        </LoginBtn>
+        <SignUpBtn onClick={() => openAuth && openAuth("signup")}>
+          회원가입
+        </SignUpBtn>
+      </BtnRow>
     </div>
   );
 };
