@@ -16,7 +16,7 @@ const Header = ({ openAuth }) => {
   return (
     <HeaderWrap>
       {/* 로고 */}
-      <Logo onClick={() => navigate("/")}>blind</Logo>
+      <Logo onClick={() => navigate(loginUser ? "/home" : "/")}>blind</Logo>
 
       {/* 검색바 */}
       <SearchWrap>
@@ -143,11 +143,11 @@ const OutlineBtn1 = styled.button`
   background: #1d6bf3;
   font-size: 13px;
   font-weight: 500;
-  color: #1a1a1a;
+  color: #fff;
   cursor: pointer;
   white-space: nowrap;
   &:hover {
-    background: #f5f5f5;
+    background: #1558d0;
   }
 `;
 

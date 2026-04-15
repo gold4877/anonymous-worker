@@ -22,7 +22,7 @@ export default Footer;
 
 // ─── 스타일 ──────────────────────────────────────────────────
 const FooterWrap = styled.footer`
-  background: #1a1a1a;
+  background: #fff;
   padding: 20px 24px;
   margin-top: auto;
 `;
