@@ -28,6 +28,8 @@ function MainPage({ openAuth, searchValue = "" }) {
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState("인기 게시물");
 
+  const isAdmin = loginUser?.admin;
+
   // 페이지 로드 시 게시글 전체 조회
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -100,6 +102,7 @@ function MainPage({ openAuth, searchValue = "" }) {
           mode="scroller"
           activeMenu={activeMenu}
           onMenuClick={handleMenuClick}
+          isAdmin={isAdmin}
         />
 
         {/* 콘텐츠 */}

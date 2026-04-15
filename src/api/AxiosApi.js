@@ -38,6 +38,11 @@ const AxiosApi = {
   //  User - 회원 정보 조회 / 수정
   // ==========================================
 
+  // 전체 회원 정보 조회 - 임의 추가
+  getUserList: async (userId) => {
+    return await axios.get(`${BASE_URL}/api/users`);
+  },
+
   // 회원 정보 조회
   getUser: async (userId) => {
     return await axios.get(`${BASE_URL}/api/users/${userId}`);
