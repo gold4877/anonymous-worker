@@ -1,9 +1,9 @@
 import "./App.css";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import GlobalStyle from "./style/GlobalStyle";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Navigate, useNavigate } from "react-router-dom";
-import UserStore, { UserContext } from "./context/UserStore";
+import { Navigate } from "react-router-dom";
+import UserStore from "./context/UserStore";
 import Layout from "./pages/Layout";
 
 import MainPage from "./pages/MainPage";
