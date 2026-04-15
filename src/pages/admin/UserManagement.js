@@ -552,19 +552,21 @@ const UserManagement = () => {
                     )}
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    <Select
-                      value=""
-                      onChange={(e) => handleBanUpdate(user, e.target.value)}
-                      style={{ fontSize: "0.75rem", padding: "3px" }}
-                    >
-                      <option value="">- 선택 -</option>
-                      <option value="clear">제재 해제 (활성)</option>
-                      <option value="1d">1일 정지</option>
-                      <option value="3d">3일 정지</option>
-                      <option value="7d">7일 정지</option>
-                      <option value="15d">15일 정지</option>
-                      <option value="perm">영구 정지</option>
-                    </Select>
+                    {!user.is_admin && (
+                      <Select
+                        value=""
+                        onChange={(e) => handleBanUpdate(user, e.target.value)}
+                        style={{ fontSize: "0.75rem", padding: "3px" }}
+                      >
+                        <option value="">- 선택 -</option>
+                        <option value="clear">제재 해제 (활성)</option>
+                        <option value="1d">1일 정지</option>
+                        <option value="3d">3일 정지</option>
+                        <option value="7d">7일 정지</option>
+                        <option value="15d">15일 정지</option>
+                        <option value="perm">영구 정지</option>
+                      </Select>
+                    )}
                   </td>
                 </TableRow>
               ))}
