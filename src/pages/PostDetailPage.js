@@ -50,6 +50,12 @@ const dummyComments = [
   },
 ];
 
+const categoryMap = {
+  FREE: "자유게시판",
+  QNA: "질문 / 답변",
+  INFO: "정보게시판",
+};
+
 const formatRelativeDate = (value) => {
   const date = new Date(value);
   const now = new Date();
@@ -177,6 +183,9 @@ const PostDetailPage = () => {
               <span>목록으로</span>
             </BackButton>
           </TopRow>
+          <CategoryBadge>
+            {categoryMap[post.category] || post.category}
+          </CategoryBadge>
           <Title>{post.title}</Title>
 
           <AuthorRow>{getAuthorText(post.companyName, post.maskedEmail)}</AuthorRow>
@@ -300,7 +309,7 @@ const TopRow = styled.div`
 const BackButton = styled.button`
   display: flex;
   gap: 6px;
-  margin: 30px 0 0 0;
+  margin: 30px 0 30px 0;
   padding: 0;
 
   border: none;
@@ -315,12 +324,22 @@ const BackButton = styled.button`
   }
 `;
 
+const CategoryBadge = styled.div`
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(29, 107, 243, 0.1);
+  color: #1D6BF3;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
 const Title = styled.h1`
   font-size: 23px;
   font-weight: 800;
   line-height: 1.25;
   color: ${COLORS.text};
-  margin: 20px 0 18px 0;
+  margin: 10px 0 18px 0;
 
   @media screen and (max-width: 768px) {
     font-size: 34px;
