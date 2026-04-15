@@ -5,6 +5,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 import UserStore from "./context/UserStore";
 import Layout from "./pages/Layout";
+import EasterEgg from "./component/EasterEgg";
+import Header from "./component/Header";
+import Footer from "./component/Footer";
 
 import MainPage from "./pages/MainPage";
 import PostDetailPage from "./pages/PostDetailPage";
@@ -18,11 +21,8 @@ import PostManagement from "./pages/admin/PostManagement";
 function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState("login");
+  const [searchValue, setSearchValue] = useState(""); // ← 검색 상태 App으로 통합
 
-  // // 임시 관리자 권한 (테스트 시 true로 설정)
-  // const isAdmin = true;
-
-  // tab: "login" | "signup"
   const openAuth = (tab = "login") => {
     setAuthTab(tab);
     setIsAuthOpen(true);
@@ -34,13 +34,41 @@ function App() {
       <GlobalStyle />
       <UserStore>
         <Router>
-          <Routes>
-            {/* 메인 — 비로그인도 접근 가능 */}
-            <Route path="/" element={<MainPage openAuth={openAuth} />} />
+          <EasterEgg />
 
-            {/* 로그인 이후 */}
-            <Route element={<Layout openAuth={openAuth} />}>
-              <Route path="/home" element={<MainPage openAuth={openAuth} />} />
+          <Routes>
+            {/* "/" — 비로그인, Header/Footer 직접 포함 + 검색 연결 */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <Header
+                    openAuth={openAuth}
+                    searchValue={searchValue}
+                    onSearch={setSearchValue}
+                  />
+                  <MainPage openAuth={openAuth} searchValue={searchValue} />
+                  <Footer />
+                </>
+              }
+            />
+
+            {/* 로그인 이후 — Layout 이 Header/Footer 포함 + 검색 연결 */}
+            <Route
+              element={
+                <Layout
+                  openAuth={openAuth}
+                  searchValue={searchValue}
+                  onSearch={setSearchValue}
+                />
+              }
+            >
+              <Route
+                path="/home"
+                element={
+                  <MainPage openAuth={openAuth} searchValue={searchValue} />
+                }
+              />
               <Route path="/write" element={<WritePostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
 
@@ -55,7 +83,6 @@ function App() {
             </Route>
           </Routes>
 
-          {/* Router 안에 있어야 useNavigate 사용 가능 */}
           <AuthModal open={isAuthOpen} close={closeAuth} initialTab={authTab} />
         </Router>
       </UserStore>
