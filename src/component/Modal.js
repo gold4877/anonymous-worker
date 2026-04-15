@@ -10,7 +10,7 @@ const ModalStyle = styled.div`
     bottom: 0;
     left: 0;
     z-index: 99;
-    background-color: #1a1a1a;
+    background-color: rgba(0, 0, 0, 0.6);
   }
 
   .openModal {
@@ -29,37 +29,27 @@ const ModalStyle = styled.div`
     /* 팝업이 열릴때 스르륵 열리는 효과 */
     animation: modal-show 0.3s;
     overflow: hidden;
-
     header {
       position: relative;
-      padding: 8px 40px 0 16px;
-      background-color: #ffffff;
-      height: 32px; //
+      padding: 16px 64px 16px 16px;
+      background-color: #f1f1f1;
+      font-weight: 700;
       button {
         position: absolute;
-        top: 4px;
-        right: 8px;
-
-        border: none;
+        top: 15px;
+        right: 15px;
+        width: 30px;
+        font-size: 21px;
+        font-weight: 700;
+        text-align: center;
+        color: #999;
         background-color: transparent;
-        color: #999999;
-        font-size: 20px;
-        cursor: pointer;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        transition: all 0.2s ease;
-        &:hover {
-          color: #1a1a1a;
-        }
       }
     }
     main {
       padding: 16px;
-      border-bottom: 1px solid #f5f5f5;
-      border-top: 1px solid #f5f5f5;
+      border-bottom: 1px solid #dee2e6;
+      border-top: 1px solid #dee2e6;
     }
     footer {
       padding: 12px 16px;
@@ -67,7 +57,7 @@ const ModalStyle = styled.div`
       button {
         padding: 6px 12px;
         color: #fff;
-        background-color: #999999;
+        background-color: #6c757d;
         border-radius: 5px;
         font-size: 13px;
       }
@@ -94,16 +84,16 @@ const ModalStyle = styled.div`
   }
 `;
 
-// const Button = styled.button`
-//   outline: none;
-//   cursor: pointer;
-//   margin-right: 10px;
-//   border: 0;
-//   width: 60px;
-// `;
+const Button = styled.button`
+  outline: none;
+  cursor: pointer;
+  margin-right: 10px;
+  border: 0;
+  width: 60px;
+`;
 
 const Modal = (props) => {
-  const { open, close, header, children } = props;
+  const { open, confirm, close, type, header, children } = props;
 
   return (
     <ModalStyle>
@@ -115,6 +105,10 @@ const Modal = (props) => {
               <button onClick={close}>&times;</button>
             </header>
             <main>{children}</main>
+            <footer>
+              {type && <Button onClick={confirm}>확인</Button>}
+              <Button onClick={close}>취소</Button>
+            </footer>
           </section>
         )}
       </div>
