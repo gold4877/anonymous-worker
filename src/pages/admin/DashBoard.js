@@ -16,7 +16,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
-// 1. 색상 팔레트 정의
+// 색상 팔레트 정의
 const Colors = {
   Primary: "#1A1A1A",
   Accent: "#1D6BF3",
@@ -28,7 +28,7 @@ const Colors = {
   Error: "#E53E3E",
 };
 
-// 2. Chart.js 등록
+// Chart.js 등록
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -40,7 +40,7 @@ ChartJS.register(
   Filler,
 );
 
-// 3. Styled Components 정의
+// Styled Components 정의
 const Container = styled.div`
   min-height: 100-vh;
   padding: 2rem;
@@ -170,14 +170,13 @@ const DashBoard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("users");
 
-  // 게시글 통계 저장할 상태 변수
+  // 통계, 차트데이터 저장할 상태 변수
   const [stats, setStats] = useState({
     postTotal: 0,
     postToday: 0,
     userTotal: 0,
     userToday: 0,
     pendingCnt: 0,
-    // 추가
     userChartData: [],
     postChartData: [],
     labels: [],
@@ -188,13 +187,6 @@ const DashBoard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // 2. 오늘 날짜 구하기
-        // const now = new Date();
-        // const year = now.getFullYear();
-        // const month = String(now.getMonth() + 1).padStart(2, "0");
-        // const day = String(now.getDate()).padStart(2, "0");
-        // const todayStr = `${year}-${month}-${day}`;
-
         const [postRsp, userRsp] = await Promise.all([
           AxiosApi.getPostList(),
           AxiosApi.getUserList(),
@@ -230,15 +222,7 @@ const DashBoard = () => {
                 .length,
           );
 
-          // 3. 오늘 작성된 게시글 필터링
-          // const todayPosts = allPosts.filter(
-          //   (post) => post.createdAt?.split("T")[0] === todayStr,
-          // );
-          // const todayUsers = allUsers.filter(
-          //   (user) => user.createdAt?.split("T")[0] === todayStr,
-          // );
-
-          // 4. 인증 대기자 Count
+          // 인증 대기자 Count
           const pendingCnt = allUsers.filter(
             (user) => user.certStatus === "PENDING",
           );
