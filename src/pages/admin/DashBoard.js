@@ -176,6 +176,7 @@ const DashBoard = () => {
     postToday: 0,
     userTotal: 0,
     userToday: 0,
+    pendingCnt: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -207,11 +208,17 @@ const DashBoard = () => {
             (user) => user.createdAt?.split("T")[0] === todayStr,
           );
 
+          // 4. 인증 대기자 목록
+          const pendingCnt = allUsers.filter(
+            (user) => user.certStatus === "PENDING",
+          );
+
           setStats({
             postTotal: allPosts.length,
             postToday: todayPosts.length,
             userTotal: allUsers.length,
             userToday: todayUsers.length,
+            pendingCnt: pendingCnt.length,
           });
         }
       } catch (e) {
@@ -298,8 +305,9 @@ const DashBoard = () => {
             <label style={{ color: Colors.TextMuted, fontSize: "0.875rem" }}>
               검토 대기
             </label>
-            <div className="count">12</div>
-            <div className="desc">(추가 or 삭제)</div>
+            <div className="count">
+              {loading ? "..." : `${stats.pendingCnt}`}
+            </div>
           </ActionCard>
         </Grid>
 
