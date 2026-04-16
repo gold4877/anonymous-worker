@@ -15,17 +15,6 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-);
-
 const Colors = {
   Primary: "#1A1A1A",
   Accent: "#1D6BF3",
@@ -37,6 +26,17 @@ const Colors = {
   Error: "#E53E3E",
 };
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+);
+
 const DashBoard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("users");
@@ -46,6 +46,9 @@ const DashBoard = () => {
     userTotal: 0,
     userToday: 0,
     pendingCnt: 0,
+    userChartData: [],
+    postChartData: [],
+    labels: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -53,8 +56,7 @@ const DashBoard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const today = new Date().toISOString().split("T")[0]; // "2026-04-16"
-
+        // ✅ fix 1: 3개 다 destructuring
         const [postRsp, userRsp, pendingRsp] = await Promise.all([
           AxiosApi.getPostList(),
           AxiosApi.getUserList(),
@@ -67,17 +69,39 @@ const DashBoard = () => {
           ? pendingRsp.data.data || []
           : [];
 
+        // 최근 7일 날짜 배열 생성
+        const last7DaysLabels = [];
+        const last7DaysFull = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          last7DaysFull.push(`${d.getFullYear()}-${month}-${day}`);
+          last7DaysLabels.push(`${month}/${day}`);
+        }
+
+        const userCounts = last7DaysFull.map(
+          (date) =>
+            allUsers.filter((u) => u.createdAt?.split("T")[0] === date).length,
+        );
+        const postCounts = last7DaysFull.map(
+          (date) =>
+            allPosts.filter((p) => p.createdAt?.split("T")[0] === date).length,
+        );
+
         setStats({
           postTotal: allPosts.length,
-          postToday: allPosts.filter((p) => p.createdAt?.startsWith(today))
-            .length,
+          postToday: postCounts[6],
           userTotal: allUsers.length,
-          userToday: allUsers.filter((u) => u.createdAt?.startsWith(today))
-            .length,
-          pendingCnt: pending.length,
+          userToday: userCounts[6],
+          pendingCnt: pending.length, // ✅ fix 1: pendingRsp 데이터 사용
+          userChartData: userCounts,
+          postChartData: postCounts,
+          labels: last7DaysLabels,
         });
       } catch (e) {
-        console.error("대시보드 데이터 조회 실패:", e);
+        console.error("데이터 로딩 실패:", e);
       } finally {
         setLoading(false);
       }
@@ -92,21 +116,23 @@ const DashBoard = () => {
     scales: {
       y: {
         grid: { color: Colors.BgInput },
-        ticks: { color: Colors.TextMuted },
+        ticks: {
+          color: Colors.TextMuted,
+          stepSize: 1,
+          callback: (value) => (Number.isInteger(value) ? value : undefined),
+        },
+        beginAtZero: true,
       },
       x: { grid: { display: false }, ticks: { color: Colors.TextMuted } },
     },
   };
 
   const chartData = {
-    labels: ["월", "화", "수", "목", "금", "토", "일"],
+    labels: stats.labels,
     datasets: [
       {
         fill: true,
-        data:
-          activeTab === "users"
-            ? [10, 25, 15, 30, 20, 40, 55]
-            : [40, 30, 70, 50, 80, 60, 90],
+        data: activeTab === "users" ? stats.userChartData : stats.postChartData,
         borderColor: Colors.Accent,
         backgroundColor: `${Colors.Accent}1A`,
         tension: 0.4,
@@ -117,12 +143,12 @@ const DashBoard = () => {
   return (
     <Container>
       <Wrapper>
+        {/* ✅ fix 2: PageHeader 로 통일 */}
         <PageHeader>
           <h1>대시보드</h1>
         </PageHeader>
 
         <Grid>
-          {/* 가입자 카드 */}
           <Card
             onClick={() => navigate("/admin/users")}
             style={{ cursor: "pointer" }}
@@ -139,7 +165,6 @@ const DashBoard = () => {
             </StatSection>
           </Card>
 
-          {/* 게시글 카드 */}
           <Card
             onClick={() => navigate("/admin/posts")}
             style={{ cursor: "pointer" }}
@@ -156,7 +181,6 @@ const DashBoard = () => {
             </StatSection>
           </Card>
 
-          {/* 인증 대기 카드 */}
           <ActionCard
             onClick={() => navigate("/admin/users")}
             style={{ cursor: "pointer" }}
@@ -169,10 +193,9 @@ const DashBoard = () => {
           </ActionCard>
         </Grid>
 
-        {/* 차트 */}
         <ChartContainer>
           <ChartHeader>
-            <h2>시스템 현황 (주간 추이)</h2>
+            <h2>시스템 현황</h2>
             <TabGroup>
               <TabButton
                 active={activeTab === "users"}
@@ -199,7 +222,7 @@ const DashBoard = () => {
 
 export default DashBoard;
 
-// ─── 스타일 ──────────────────────────────────────────────────
+// ─── 스타일 (✅ fix 3: 중복 제거 후 한 곳에만) ──────────────
 const Container = styled.div`
   min-height: 100vh;
   padding: 2rem;
