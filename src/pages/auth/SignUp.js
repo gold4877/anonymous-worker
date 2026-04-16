@@ -873,8 +873,7 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
           <InfoBox>
             <strong>🎉 가입을 축하해요!</strong>
-            회사 인증은 선택 사항이에요. 나중에 마이페이지에서도 신청할 수
-            있어요.
+            회사 인증은 선택 사항이에요. 
           </InfoBox>
 
           {/* 실명 */}
