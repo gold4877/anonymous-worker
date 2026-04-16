@@ -12,13 +12,11 @@ import { IoArrowBack } from "react-icons/io5";
 import AxiosApi from "../api/AxiosApi";
 import { UserContext } from "../context/UserStore";
 
-// ─── 상수 ────────────────────────────────────────────────────
 const COLORS = {
   text: "#1A1A1A",
   primary: "#1D6BF3",
   white: "#FFFFFF",
   bg: "#F5F5F5",
-  inputBg: "#EEEEEE",
   border: "#E1E1E1",
   gray: "#999999",
 };
@@ -29,17 +27,14 @@ const categoryMap = {
   INFO: "정보게시판",
 };
 
-// ─── 날짜 포맷 ────────────────────────────────────────────────
 const formatRelativeDate = (value) => {
   const date = new Date(value);
   const now = new Date();
   if (Number.isNaN(date.getTime())) return value;
-
   const diffMs = now - date;
   const diffMin = Math.floor(diffMs / (1000 * 60));
   const diffHour = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDay = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
   if (diffMin < 1) return "방금 전";
   if (diffMin < 60) return `${diffMin}분 전`;
   if (diffHour < 24) return `${diffHour}시간 전`;
@@ -48,7 +43,6 @@ const formatRelativeDate = (value) => {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
 };
 
-// ─── 컴포넌트 ─────────────────────────────────────────────────
 const PostDetailPage = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
@@ -78,26 +72,23 @@ const PostDetailPage = () => {
   }, [postId]);
 
   // 댓글 목록 조회
+  const fetchComments = async () => {
+    try {
+      const rsp = await AxiosApi.getCommentList(postId);
+      if (rsp.data.success) setComments(rsp.data.data || []);
+    } catch (e) {
+      console.error("댓글 조회 실패:", e);
+    }
+  };
+
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const rsp = await AxiosApi.getCommentList(postId);
-        if (rsp.data.success) {
-          setComments(
-            (rsp.data.data || []).map((c) => ({ ...c, liked: false })),
-          );
-        }
-      } catch (e) {
-        console.error("댓글 조회 실패:", e);
-      }
-    };
     fetchComments();
   }, [postId]);
 
-  // 좋아요 여부 확인 (로그인 상태일 때)
+  // 좋아요 여부 확인
   useEffect(() => {
     if (!loginUser) return;
-    const checkLiked = async () => {
+    const check = async () => {
       try {
         const rsp = await AxiosApi.isLiked(postId, loginUser.userId);
         if (rsp.data.success) setLiked(rsp.data.data);
@@ -105,15 +96,12 @@ const PostDetailPage = () => {
         console.error("좋아요 여부 확인 실패:", e);
       }
     };
-    checkLiked();
+    check();
   }, [postId, loginUser]);
 
-  // 로딩 중
-  if (!post) {
-    return <LoadingPage>게시글을 불러오는 중입니다...</LoadingPage>;
-  }
+  if (!post) return <LoadingPage>게시글을 불러오는 중입니다...</LoadingPage>;
 
-  // ── 좋아요 토글 ──────────────────────────────────────────────
+  // 좋아요 토글
   const onClickLike = async () => {
     if (!loginUser) {
       alert("로그인이 필요합니다.");
@@ -130,7 +118,7 @@ const PostDetailPage = () => {
     }
   };
 
-  // ── 댓글 등록 ────────────────────────────────────────────────
+  // 댓글 등록
   const onClickCommentSubmit = async () => {
     if (!loginUser) {
       alert("로그인이 필요합니다.");
@@ -145,13 +133,7 @@ const PostDetailPage = () => {
         commentInput.trim(),
       );
       if (rsp.data.success) {
-        // 댓글 등록 후 목록 다시 조회
-        const listRsp = await AxiosApi.getCommentList(postId);
-        if (listRsp.data.success) {
-          setComments(
-            (listRsp.data.data || []).map((c) => ({ ...c, liked: false })),
-          );
-        }
+        await fetchComments();
         setCommentInput("");
       }
     } catch (e) {
@@ -162,7 +144,6 @@ const PostDetailPage = () => {
     }
   };
 
-  // Enter 키 댓글 등록
   const onKeyDownComment = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -173,7 +154,6 @@ const PostDetailPage = () => {
   return (
     <Page>
       <Container>
-        {/* 게시글 본문 */}
         <PostSection>
           <BackButton onClick={() => navigate(-1)}>
             <IoArrowBack size={20} />
@@ -206,7 +186,6 @@ const PostDetailPage = () => {
           <Divider />
           <Content>{post.content}</Content>
 
-          {/* 좋아요 버튼 */}
           <BottomRow>
             <LikeBox onClick={onClickLike}>
               {liked ? (
@@ -219,11 +198,9 @@ const PostDetailPage = () => {
           </BottomRow>
         </PostSection>
 
-        {/* 댓글 영역 */}
         <CommentSection>
           <CommentTitle>댓글 {comments.length}</CommentTitle>
 
-          {/* 댓글 입력 */}
           <CommentInputContainer>
             <CommentInputWrap>
               <CommentInputInner>
@@ -243,23 +220,25 @@ const PostDetailPage = () => {
                 />
               </CommentInputInner>
             </CommentInputWrap>
-            <CommentSubmitRow>
-              <SubmitButton
-                onClick={onClickCommentSubmit}
-                disabled={!loginUser || submitting}
-              >
-                {submitting ? "등록 중" : "등록"}
-              </SubmitButton>
-            </CommentSubmitRow>
+            <SubmitButton
+              onClick={onClickCommentSubmit}
+              disabled={!loginUser || submitting}
+            >
+              {submitting ? "등록 중" : "등록"}
+            </SubmitButton>
           </CommentInputContainer>
 
-          {/* 댓글 목록 */}
           <CommentList>
             {comments.map((comment) => (
               <CommentItem key={comment.commentId}>
                 <CommentAuthor>
+                  {/* 회사명 있으면 파랑, 없으면 무소속 */}
                   <CompanyName>{comment.companyName || "무소속"}</CompanyName>
-                  <MaskedId> · {comment.maskedEmail}</MaskedId>
+                  {/* maskedEmail 있으면 표시, 없으면 userName */}
+                  <MaskedId>
+                    {" "}
+                    · {comment.maskedEmail || comment.userName}
+                  </MaskedId>
                 </CommentAuthor>
                 <CommentText>{comment.content}</CommentText>
                 <CommentMetaRow>
@@ -289,22 +268,18 @@ const LoadingPage = styled.div`
   color: ${COLORS.gray};
   font-size: 14px;
 `;
-
 const Page = styled.div`
   min-height: 100vh;
   background: ${COLORS.bg};
 `;
-
 const Container = styled.div`
   max-width: 760px;
   margin: 0 auto;
   padding: 28px 20px 60px;
 `;
-
 const PostSection = styled.div`
   background: ${COLORS.bg};
 `;
-
 const BackButton = styled.button`
   display: flex;
   gap: 6px;
@@ -320,7 +295,6 @@ const BackButton = styled.button`
     opacity: 0.7;
   }
 `;
-
 const CategoryBadge = styled.div`
   display: inline-block;
   padding: 4px 12px;
@@ -330,7 +304,6 @@ const CategoryBadge = styled.div`
   font-size: 12px;
   font-weight: 600;
 `;
-
 const Title = styled.h1`
   font-size: 23px;
   font-weight: 800;
@@ -338,14 +311,12 @@ const Title = styled.h1`
   color: ${COLORS.text};
   margin: 10px 0 18px;
 `;
-
 const AuthorRow = styled.div`
   font-size: 15px;
   font-weight: 500;
   color: ${COLORS.text};
   margin-bottom: 12px;
 `;
-
 const InfoRow = styled.div`
   display: flex;
   align-items: center;
@@ -354,20 +325,17 @@ const InfoRow = styled.div`
   font-size: 14px;
   margin-bottom: 24px;
 `;
-
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
 `;
-
 const Divider = styled.div`
   width: 100%;
   height: 1px;
   background: ${COLORS.border};
   margin-bottom: 36px;
 `;
-
 const Content = styled.div`
   font-size: 15px;
   line-height: 1.7;
@@ -375,13 +343,11 @@ const Content = styled.div`
   white-space: pre-wrap;
   margin-bottom: 60px;
 `;
-
 const BottomRow = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 44px;
 `;
-
 const LikeBox = styled.button`
   display: flex;
   align-items: center;
@@ -392,31 +358,26 @@ const LikeBox = styled.button`
   background: transparent;
   cursor: pointer;
 `;
-
 const LikeCount = styled.span`
   font-size: 16px;
   font-weight: 500;
   color: ${COLORS.text};
 `;
-
 const CommentSection = styled.div`
   border-top: 1px solid ${COLORS.border};
   padding-top: 18px;
 `;
-
 const CommentTitle = styled.h2`
   font-size: 16px;
   font-weight: 600;
   color: ${COLORS.text};
   margin: 0 0 18px;
 `;
-
 const CommentInputContainer = styled.div`
   display: flex;
   width: 100%;
   margin-bottom: 16px;
 `;
-
 const CommentInputWrap = styled.div`
   flex: 1;
   border: 1px solid ${COLORS.border};
@@ -425,21 +386,18 @@ const CommentInputWrap = styled.div`
   display: flex;
   align-items: center;
 `;
-
 const CommentInputInner = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
   padding: 0 20px;
 `;
-
 const InputIcon = styled.div`
   display: flex;
   align-items: center;
   color: #666666;
   margin-right: 12px;
 `;
-
 const CommentInput = styled.input`
   border: none;
   outline: none;
@@ -452,14 +410,8 @@ const CommentInput = styled.input`
   }
   &:disabled {
     cursor: not-allowed;
-    background: transparent;
   }
 `;
-
-const CommentSubmitRow = styled.div`
-  display: flex;
-`;
-
 const SubmitButton = styled.button`
   border: none;
   background: ${(p) => (p.disabled ? "#cccccc" : COLORS.primary)};
@@ -469,44 +421,36 @@ const SubmitButton = styled.button`
   cursor: ${(p) => (p.disabled ? "not-allowed" : "pointer")};
   height: 70px;
   width: 80px;
-  transition: background 0.2s;
   &:hover:not(:disabled) {
     background: #1558d0;
   }
 `;
-
 const CommentList = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
 const CommentItem = styled.div`
   padding: 18px;
   border-bottom: 1px solid ${COLORS.border};
 `;
-
 const CommentAuthor = styled.div`
   margin-bottom: 8px;
 `;
-
 const CompanyName = styled.span`
   color: #1d6bf3;
   font-weight: 500;
   font-size: 14px;
 `;
-
 const MaskedId = styled.span`
   color: ${COLORS.gray};
   font-size: 14px;
 `;
-
 const CommentText = styled.div`
   font-size: 15px;
   line-height: 1.55;
   color: ${COLORS.text};
   margin-bottom: 10px;
 `;
-
 const CommentMetaRow = styled.div`
   display: flex;
   align-items: center;
@@ -514,7 +458,6 @@ const CommentMetaRow = styled.div`
   color: ${COLORS.gray};
   font-size: 13px;
 `;
-
 const CommentMeta = styled.div`
   display: flex;
   align-items: center;

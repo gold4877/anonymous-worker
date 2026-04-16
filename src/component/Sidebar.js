@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
-function Sidebar({ mode = "scroller", activeMenu, onMenuClick }) {
+function Sidebar({ mode = "scroller", activeMenu, onMenuClick, isAdmin }) {
   const navigate = useNavigate();
 
   const menuItems = [
@@ -11,11 +11,18 @@ function Sidebar({ mode = "scroller", activeMenu, onMenuClick }) {
     { label: "질문 게시판" }, // "문의 게시판" → "질문 게시판"
   ];
 
+  if (isAdmin) {
+    menuItems.push({ label: "관리자 페이지", path: "/admin" });
+  }
+
   const handleLogoClick = () => navigate("/");
 
   const handleClick = (item) => {
-    // 현재는 scroller 모드만 사용 (MainPage 스크롤 이동)
-    onMenuClick?.(item.label);
+    if (item.label === "관리자 페이지") {
+      navigate(item.path);
+    } else {
+      onMenuClick?.(item.label);
+    }
   };
 
   return (
