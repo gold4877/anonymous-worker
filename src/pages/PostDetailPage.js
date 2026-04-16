@@ -101,12 +101,28 @@ const PostDetailPage = () => {
 
   if (!post) return <LoadingPage>게시글을 불러오는 중입니다...</LoadingPage>;
 
-  // 좋아요 토글
+  // ✨ [변경] 좋아요 추가 함수 (취소는 불가능)
+  // 설명:
+  //   - 로그인 확인
+  //   - 이미 좋아요한 경우 팝업 메시지 표시
+  //   - 한 번만 좋아요 가능 (중복 불가능)
+  //   - 서버 에러 시 팝업 메시지 표시
   const onClickLike = async () => {
     if (!loginUser) {
       alert("로그인이 필요합니다.");
       return;
     }
+
+    // ✨ [변경] 이미 좋아요한 경우 팝업 띄우기
+    // 설명:
+    //   - liked 상태가 true이면 이미 좋아요한 것
+    //   - 팝업 메시지로 "이미 좋아요한 게시글입니다." 표시
+    //   - 서버 요청을 하지 않음
+    if (liked) {
+      alert("이미 좋아요한 게시글입니다.");
+      return;
+    }
+
     try {
       const rsp = await AxiosApi.toggleLike(postId, loginUser.userId);
       if (rsp.data.success) {
@@ -114,6 +130,16 @@ const PostDetailPage = () => {
         setLikeCount(rsp.data.data.likeCount);
       }
     } catch (e) {
+      // ✨ [변경] 서버 에러 시 팝업 메시지 표시
+      // 설명:
+      //   - 서버에서 반환한 에러 메시지 표시
+      //   - "이미 좋아요한 게시글입니다." 메시지 처리
+      //   - 일반 에러는 기본 메시지 표시
+      if (e.response?.data?.message) {
+        alert(e.response.data.message);
+      } else {
+        alert("좋아요 처리 중 오류가 발생했습니다.");
+      }
       console.error("좋아요 실패:", e);
     }
   };

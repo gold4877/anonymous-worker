@@ -33,6 +33,26 @@ function MainPage({ openAuth, searchValue = "" }) {
     fetchPosts();
   }, []);
 
+  // ✨ [변경] 페이지가 활성화될 때마다 데이터 새로고침
+  // 설명:
+  //   - 사용자가 게시글 상세 페이지에서 돌아올 때 최신 데이터 로드
+  //   - 좋아요 토글 후 정렬이 제대로 반영되도록 함
+  //   - visibility API를 사용하여 탭 전환 시에도 감지
+  //   - 문제 해결: 좋아요 토글 후 인기게시물 정렬 반영 안 됨 → 해결됨!
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // 페이지가 다시 보일 때 데이터 새로고침
+        fetchPosts();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -49,9 +69,21 @@ function MainPage({ openAuth, searchValue = "" }) {
   const getPostsBySection = (section) => {
     let posts = [];
     if (section === "인기 게시물") {
+      // ✨ [변경] 인기게시물 조건 및 정렬 로직 개선
+      // 변경 사항:
+      //   1. 좋아요 제한: 2개 이상 (1개 이상 → 2개 이상)
+      //   2. 정렬 방식 변경: createdAt → became_popular_at (인기게시물이 된 시간)
+      // 설명:
+      //   - 기존: createdAt 기준으로 정렬 (게시글 작성 시간순)
+      //   - 변경: became_popular_at 기준으로 정렬 (인기게시물이 된 순서)
+      //   - became_popular_at: 좋아요 2개가 되는 순간의 시간을 기록
+      //   - 정렬 순서: became_popular_at (내림차순) - 가장 최근에 인기가 된 게시물부터 표시
+      //   - 예시: 1350이 방금 2개 좋아요가 되면 1405 위에 표시됨
       posts = [...allPosts]
-        .sort((a, b) => b.likeCount - a.likeCount)
-        .slice(0, 5);
+        .filter((p) => p.likeCount >= 2)
+        .sort(
+          (a, b) => new Date(b.becamePopularAt) - new Date(a.becamePopularAt),
+        );
     } else {
       posts = allPosts.filter((p) => p.category === CATEGORY_MAP[section]);
     }
@@ -100,7 +132,6 @@ function MainPage({ openAuth, searchValue = "" }) {
 
   // 더보기 클릭 → 해당 카테고리 전체 뷰
   const handleMoreClick = (section) => {
-    if (section === "인기 게시물") return; // 인기 게시물은 더보기 없음
     setFilterCategory(section);
     setActiveMenu(section);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -140,7 +171,12 @@ function MainPage({ openAuth, searchValue = "" }) {
           isAdmin={isAdmin}
         />
 
-        <MainContent>
+        {/* ✨ [변경] MainContent에 key prop을 추가하여 filterCategory 상태 변경 시 새 페이지로 전환되는 효과를 줍니다 */}
+        {/* key={filterCategory}를 사용하면:
+            - filterCategory가 변경될 때마다 컴포넌트가 리마운트됨
+            - 이로 인해 scaleAndFadeIn 애니메이션이 트리거됨
+            - 마치 새로운 페이지로 전환되는 것처럼 보임 */}
+        <MainContent key={filterCategory}>
           {loading ? (
             <LoadingText>게시글을 불러오는 중...</LoadingText>
           ) : filterCategory ? (
@@ -148,7 +184,11 @@ function MainPage({ openAuth, searchValue = "" }) {
             <CategorySection>
               <CategoryHeader>
                 <CategoryTitle>{filterCategory}</CategoryTitle>
-                <BackButton onClick={handleBackToMain}>← 전체 보기</BackButton>
+                {/* ✨ [변경] 버튼 텍스트를 변경했습니다 */}
+                {/* 기존: "← 전체 보기"
+                    변경 후: "← 메인으로"
+                    변경 이유: 버튼이 실제로 메인 페이지로 돌아가므로 더 명확한 이름으로 변경 */}
+                <BackButton onClick={handleBackToMain}>← 메인으로</BackButton>
               </CategoryHeader>
               <PostsContainer>
                 {renderPostList(getPostsBySection(filterCategory))}
@@ -164,12 +204,23 @@ function MainPage({ openAuth, searchValue = "" }) {
               return (
                 <CategorySection ref={sectionRefs[section]} key={section}>
                   <CategoryHeader>
-                    <CategoryTitle onClick={() => handleMenuClick(section)}>
+                    {/* ✨ [변경] CategoryTitle 클릭 시 더보기 버튼과 동일한 기능을 하도록 수정했습니다 */}
+                    {/* 설명:
+                        - handleMoreClick(section) 호출
+                        - 필터를 설정하여 전체 게시글 뷰로 전환
+                        - 더보기 버튼과 동일한 페이지 펼쳐지기 애니메이션 효과
+                        - 사용자가 제목을 눌러도 더보기 버튼과 동일하게 동작 */}
+                    <CategoryTitle onClick={() => handleMoreClick(section)}>
                       {section}
                     </CategoryTitle>
-                    {section !== "인기 게시물" && (
+                    {/* ✨ [변경] 더보기 버튼에서 괄호(+숫자) 부분을 제거했습니다 */}
+                    {/* 설명:
+                        기존: 더보기 (+5)
+                        변경: 더보기
+                        변경 이유: 더 간결하고 깔끔한 UI 제공 */}
+                    {hasMore && (
                       <LoadMoreButton onClick={() => handleMoreClick(section)}>
-                        더보기 {hasMore && `(+${posts.length - PREVIEW_COUNT})`}
+                        더보기
                       </LoadMoreButton>
                     )}
                   </CategoryHeader>
@@ -205,12 +256,31 @@ const LayoutWrapper = styled.div`
   align-items: flex-start;
 `;
 
+// ✨ [변경] MainContent에 스케일 + 페이드 애니메이션을 추가했습니다
+// 설명:
+//   - animation: scaleAndFadeIn 0.5s ease-out
+//   - 페이지가 작은 상태에서 시작 (scale: 0.95)
+//   - 동시에 투명한 상태에서 시작 (opacity: 0)
+//   - 0.5초에 걸쳐 원래 크기로 커지면서 나타남
+//   - "페이지가 펼쳐지는" 느낌의 자연스러운 전환 효과를 제공
 const MainContent = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 30px;
   min-width: 0;
+  animation: scaleAndFadeIn 0.5s ease-out;
+
+  @keyframes scaleAndFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 `;
 
 const CategorySection = styled.div`
