@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-// useEffect, AxiosApi 추가
 import { useState, useEffect } from "react";
 import AxiosApi from "../../api/AxiosApi";
 import styled from "styled-components";
@@ -16,19 +15,6 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
-// 1. 색상 팔레트 정의
-const Colors = {
-  Primary: "#1A1A1A",
-  Accent: "#1D6BF3",
-  BgCard: "#FFFFFF",
-  BgMain: "#F5F5F5",
-  BgInput: "#EEEEEE",
-  Border: "#E1E1E1",
-  TextMuted: "#999999",
-  Error: "#E53E3E",
-};
-
-// 2. Chart.js 등록
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -40,137 +26,20 @@ ChartJS.register(
   Filler,
 );
 
-// 3. Styled Components 정의
-const Container = styled.div`
-  min-height: 100-vh;
-  padding: 2rem;
-  background-color: ${Colors.BgMain};
-  font-family: "Pretendard", sans-serif;
-`;
-
-const Wrapper = styled.div`
-  max-width: 1024px;
-  margin: 0 auto;
-`;
-
-const Header = styled.header`
-  margin-bottom: 2rem;
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: ${Colors.Primary};
-  }
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const Card = styled.div`
-  background-color: ${Colors.BgCard};
-  border: 1px solid ${Colors.Border};
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-`;
-
-const StatSection = styled.div`
-  &:not(:last-child) {
-    border-bottom: 1px solid ${Colors.BgInput};
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  label {
-    display: block;
-    font-size: 0.875rem;
-    color: ${Colors.TextMuted};
-    margin-bottom: 0.25rem;
-  }
-
-  span {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: ${(props) => (props.accent ? Colors.Accent : Colors.Primary)};
-  }
-`;
-
-const ActionCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  .count {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: ${Colors.Error};
-    margin: 0.5rem 0;
-  }
-  .desc {
-    font-size: 0.75rem;
-    color: ${Colors.TextMuted};
-  }
-`;
-
-const ChartContainer = styled.div`
-  background-color: ${Colors.BgCard};
-  border: 1px solid ${Colors.Border};
-  border-radius: 16px;
-  padding: 2rem;
-`;
-
-const ChartHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-
-  h2 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: ${Colors.Primary};
-  }
-`;
-
-const TabGroup = styled.div`
-  background-color: ${Colors.BgInput};
-  padding: 4px;
-  border-radius: 8px;
-  display: flex;
-  gap: 4px;
-`;
-
-const TabButton = styled.button`
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: ${(props) =>
-    props.active ? Colors.BgCard : "transparent"};
-  color: ${(props) => (props.active ? Colors.Accent : Colors.TextMuted)};
-  box-shadow: ${(props) =>
-    props.active ? "0 2px 4px rgba(0,0,0,0.05)" : "none"};
-
-  &:hover {
-    color: ${Colors.Accent};
-  }
-`;
+const Colors = {
+  Primary: "#1A1A1A",
+  Accent: "#1D6BF3",
+  BgCard: "#FFFFFF",
+  BgMain: "#F5F5F5",
+  BgInput: "#EEEEEE",
+  Border: "#E1E1E1",
+  TextMuted: "#999999",
+  Error: "#E53E3E",
+};
 
 const DashBoard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("users");
-
-  // 게시글 통계 저장할 상태 변수
   const [stats, setStats] = useState({
     postTotal: 0,
     postToday: 0,
@@ -181,61 +50,45 @@ const DashBoard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        // 2. 오늘 날짜 구하기
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, "0");
-        const day = String(now.getDate()).padStart(2, "0");
-        const todayStr = `${year}-${month}-${day}`;
+        const today = new Date().toISOString().split("T")[0]; // "2026-04-16"
 
-        const [postRsp, userRsp] = await Promise.all([
+        const [postRsp, userRsp, pendingRsp] = await Promise.all([
           AxiosApi.getPostList(),
           AxiosApi.getUserList(),
+          AxiosApi.getPendingCertList(),
         ]);
 
-        if (postRsp.data.success && userRsp.data.success) {
-          const allPosts = postRsp.data.data || [];
-          const allUsers = userRsp.data.data || [];
+        const allPosts = postRsp.data.success ? postRsp.data.data || [] : [];
+        const allUsers = userRsp.data.success ? userRsp.data.data || [] : [];
+        const pending = pendingRsp.data.success
+          ? pendingRsp.data.data || []
+          : [];
 
-          // 3. 오늘 작성된 게시글 필터링
-          const todayPosts = allPosts.filter(
-            (post) => post.createdAt?.split("T")[0] === todayStr,
-          );
-          const todayUsers = allUsers.filter(
-            (user) => user.createdAt?.split("T")[0] === todayStr,
-          );
-
-          // 4. 인증 대기자 목록
-          const pendingCnt = allUsers.filter(
-            (user) => user.certStatus === "PENDING",
-          );
-
-          setStats({
-            postTotal: allPosts.length,
-            postToday: todayPosts.length,
-            userTotal: allUsers.length,
-            userToday: todayUsers.length,
-            pendingCnt: pendingCnt.length,
-          });
-        }
+        setStats({
+          postTotal: allPosts.length,
+          postToday: allPosts.filter((p) => p.createdAt?.startsWith(today))
+            .length,
+          userTotal: allUsers.length,
+          userToday: allUsers.filter((u) => u.createdAt?.startsWith(today))
+            .length,
+          pendingCnt: pending.length,
+        });
       } catch (e) {
         console.error("대시보드 데이터 조회 실패:", e);
       } finally {
         setLoading(false);
       }
     };
-    fetchDashboardData();
+    fetchData();
   }, []);
 
-  const options = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-    },
+    plugins: { legend: { display: false } },
     scales: {
       y: {
         grid: { color: Colors.BgInput },
@@ -255,7 +108,7 @@ const DashBoard = () => {
             ? [10, 25, 15, 30, 20, 40, 55]
             : [40, 30, 70, 50, 80, 60, 90],
         borderColor: Colors.Accent,
-        backgroundColor: `${Colors.Accent}1A`, // 10% 투명도
+        backgroundColor: `${Colors.Accent}1A`,
         tension: 0.4,
       },
     ],
@@ -264,11 +117,12 @@ const DashBoard = () => {
   return (
     <Container>
       <Wrapper>
-        <Header>
+        <PageHeader>
           <h1>대시보드</h1>
-        </Header>
+        </PageHeader>
 
         <Grid>
+          {/* 가입자 카드 */}
           <Card
             onClick={() => navigate("/admin/users")}
             style={{ cursor: "pointer" }}
@@ -280,11 +134,12 @@ const DashBoard = () => {
               </span>
             </StatSection>
             <StatSection accent>
-              <label>신규 가입자 수</label>
+              <label>오늘 신규 가입자</label>
               <span>{loading ? "..." : `+${stats.userToday} 명`}</span>
             </StatSection>
           </Card>
 
+          {/* 게시글 카드 */}
           <Card
             onClick={() => navigate("/admin/posts")}
             style={{ cursor: "pointer" }}
@@ -296,24 +151,28 @@ const DashBoard = () => {
               </span>
             </StatSection>
             <StatSection accent>
-              <label>신규 게시글 수</label>
+              <label>오늘 신규 게시글</label>
               <span>{loading ? "..." : `+${stats.postToday} 개`}</span>
             </StatSection>
           </Card>
 
-          <ActionCard>
+          {/* 인증 대기 카드 */}
+          <ActionCard
+            onClick={() => navigate("/admin/users")}
+            style={{ cursor: "pointer" }}
+          >
             <label style={{ color: Colors.TextMuted, fontSize: "0.875rem" }}>
-              검토 대기
+              인증 대기
             </label>
-            <div className="count">
-              {loading ? "..." : `${stats.pendingCnt}`}
-            </div>
+            <div className="count">{loading ? "..." : stats.pendingCnt}</div>
+            <div className="desc">승인 대기 중인 인증 신청</div>
           </ActionCard>
         </Grid>
 
+        {/* 차트 */}
         <ChartContainer>
           <ChartHeader>
-            <h2>시스템 현황 (그래프 - 1주일)</h2>
+            <h2>시스템 현황 (주간 추이)</h2>
             <TabGroup>
               <TabButton
                 active={activeTab === "users"}
@@ -330,7 +189,7 @@ const DashBoard = () => {
             </TabGroup>
           </ChartHeader>
           <div style={{ height: "320px" }}>
-            <Line options={options} data={chartData} />
+            <Line options={chartOptions} data={chartData} />
           </div>
         </ChartContainer>
       </Wrapper>
@@ -339,3 +198,112 @@ const DashBoard = () => {
 };
 
 export default DashBoard;
+
+// ─── 스타일 ──────────────────────────────────────────────────
+const Container = styled.div`
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: ${Colors.BgMain};
+`;
+const Wrapper = styled.div`
+  max-width: 1024px;
+  margin: 0 auto;
+`;
+const PageHeader = styled.header`
+  margin-bottom: 2rem;
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: ${Colors.Primary};
+  }
+`;
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+const Card = styled.div`
+  background: ${Colors.BgCard};
+  border: 1px solid ${Colors.Border};
+  border-radius: 8px;
+  padding: 1.5rem;
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+`;
+const StatSection = styled.div`
+  &:not(:last-child) {
+    border-bottom: 1px solid ${Colors.BgInput};
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    font-size: 0.875rem;
+    color: ${Colors.TextMuted};
+    margin-bottom: 0.25rem;
+  }
+  span {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: ${(p) => (p.accent ? Colors.Accent : Colors.Primary)};
+  }
+`;
+const ActionCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  .count {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: ${Colors.Error};
+    margin: 0.5rem 0;
+  }
+  .desc {
+    font-size: 0.75rem;
+    color: ${Colors.TextMuted};
+  }
+`;
+const ChartContainer = styled.div`
+  background: ${Colors.BgCard};
+  border: 1px solid ${Colors.Border};
+  border-radius: 16px;
+  padding: 2rem;
+`;
+const ChartHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: ${Colors.Primary};
+  }
+`;
+const TabGroup = styled.div`
+  background: ${Colors.BgInput};
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  gap: 4px;
+`;
+const TabButton = styled.button`
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: ${(p) => (p.active ? Colors.BgCard : "transparent")};
+  color: ${(p) => (p.active ? Colors.Accent : Colors.TextMuted)};
+  &:hover {
+    color: ${Colors.Accent};
+  }
+`;

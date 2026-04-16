@@ -7,8 +7,7 @@ import SignUp from "./SignUp";
 const AuthModal = ({ open, close, initialTab = "login" }) => {
   const [tab, setTab] = useState(initialTab);
 
-  // 모달이 열릴 때마다 initialTab 으로 리셋
-  // 없으면 "로그인" 버튼 눌러도 이전에 열었던 탭이 유지됨
+  // 모달 열릴 때마다 initialTab 으로 리셋
   useEffect(() => {
     if (open) setTab(initialTab);
   }, [open, initialTab]);
@@ -25,7 +24,12 @@ const AuthModal = ({ open, close, initialTab = "login" }) => {
       </TabRow>
 
       {tab === "login" && <Login onClose={close} />}
-      {tab === "signup" && <SignUp switchToLogin={() => setTab("login")} />}
+      {tab === "signup" && (
+        <SignUp
+          switchToLogin={() => setTab("login")}
+          onClose={close} // ← Step 4 완료/스킵 시 모달 닫기용
+        />
+      )}
     </Modal>
   );
 };
@@ -47,8 +51,8 @@ const Tab = styled.button`
   border: none;
   cursor: pointer;
   background: none;
-  color: ${(p) => (p.active ? "#1A1A1A" : "#999999")};
+  color: ${(p) => (p.active ? "#1a1a1a" : "#999999")};
   border-bottom: ${(p) =>
-    p.active ? "2px solid #1A1A1A" : "2px solid transparent"};
+    p.active ? "2px solid #1a1a1a" : "2px solid transparent"};
   transition: all 0.15s;
 `;
