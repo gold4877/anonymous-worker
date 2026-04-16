@@ -12,13 +12,19 @@ export const UserContext = createContext(null);
 const UserStore = (props) => {
   // 테마 색상
   const [color, setColor] = useState(
-    localStorage.getItem("bgcolor") || "orange"
+    localStorage.getItem("bgcolor") || "orange",
   );
 
   // 로그인 유저 정보 (로그인 성공 시 서버 응답 data를 그대로 저장)
   const [loginUser, setLoginUser] = useState(() => {
     const saved = localStorage.getItem("loginUser");
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    // 구버전 호환: "admin" 필드 → "isAdmin" 으로 자동 변환
+    if (parsed.admin !== undefined && parsed.isAdmin === undefined) {
+      parsed.isAdmin = parsed.admin;
+    }
+    return parsed;
   });
 
   // 색상 변경 시 localStorage 동기화

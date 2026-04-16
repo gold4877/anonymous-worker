@@ -2,17 +2,20 @@ import styled from "styled-components";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserStore";
-// ✨ [변경] SVG를 ReactComponent로 import합니다.
-// src/assets/team404-logo.svg 파일을 React 컴포넌트로 가져옵니다.
 import { ReactComponent as LogoSvg } from "../assets/team404-logo.svg";
 
 const Header = ({ openAuth, searchValue = "", onSearch }) => {
   const navigate = useNavigate();
   const { loginUser, handleLogout } = useContext(UserContext);
+
   const onClickLogout = () => {
     handleLogout();
     navigate("/");
   };
+
+  // 글쓰기 가능 여부: 로그인 + 인증 승인 상태
+  const canWrite = loginUser && loginUser.certStatus === "APPROVED";
+
   return (
     <HeaderWrap>
       {/* ✨ [변경] SVG 컴포넌트를 직접 렌더링합니다. */}
@@ -20,7 +23,8 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
         {/* LogoSvg는 일반 React 컴포넌트이므로 직접 사용 가능 */}
         <LogoSvg />
       </Logo>
-      {/* 검색바 — onSearch 있을 때만 입력 가능 */}
+
+      {/* 검색바 */}
       <SearchWrap>
         <SearchIcon>🔍</SearchIcon>
         <SearchInput
@@ -30,12 +34,16 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
           readOnly={!onSearch}
         />
       </SearchWrap>
+
       {/* 버튼 영역 */}
       <BtnGroup>
         {loginUser ? (
           <>
             <UserName>{loginUser.name}님</UserName>
-            <OutlineBtn onClick={() => navigate("/write")}>글쓰기</OutlineBtn>
+            {/* 인증 승인된 유저만 글쓰기 가능 */}
+            {canWrite && (
+              <OutlineBtn onClick={() => navigate("/write")}>글쓰기</OutlineBtn>
+            )}
             <OutlineBtn onClick={onClickLogout}>로그아웃</OutlineBtn>
           </>
         ) : (
@@ -52,7 +60,9 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
     </HeaderWrap>
   );
 };
+
 export default Header;
+
 // ─── 스타일 ──────────────────────────────────────────────────
 const HeaderWrap = styled.header`
   background: #ffffff;
@@ -71,12 +81,6 @@ const Logo = styled.div`
   display: flex;
   align-items: center;
   flex-shrink: 0;
-
-  /* ✨ [변경] SVG 크기를 조정합니다. */
-  svg {
-    height: 40px;
-    width: auto;
-  }
 `;
 const SearchWrap = styled.div`
   flex: 1;

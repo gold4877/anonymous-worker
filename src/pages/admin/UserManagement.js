@@ -49,13 +49,14 @@ const UserManagement = () => {
         const pendingList = certRsp.data.success ? certRsp.data.data || [] : [];
         const certMap = {};
         pendingList.forEach((c) => {
-          certMap[c.userId] = c.certId;
+          certMap[c.userId] = { certId: c.certId, companyName: c.companyName };
         });
 
         setUsers(
           allUsers.map((u) => ({
             ...u,
-            certId: certMap[u.userId] || null, // PENDING 유저만 certId 있음
+            certId: certMap[u.userId]?.certId || null,
+            certCompanyName: certMap[u.userId]?.companyName || null,
           })),
         );
       }
@@ -225,7 +226,7 @@ const UserManagement = () => {
                         </span>
                         {user.isAdmin && <AdminBadge>ADMIN</AdminBadge>}
                       </Td>
-                      <Td>{user.companyName || "-"}</Td>
+                      <Td>{user.companyName || user.certCompanyName || "-"}</Td>
                       <Td>{user.email}</Td>
                       <Td>
                         <Badge

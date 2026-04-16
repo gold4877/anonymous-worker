@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserStore";
 import AxiosApi from "../api/AxiosApi";
@@ -20,8 +20,22 @@ const WritePostPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 인증 승인 유저(APPROVED)만 접근 가능
+  useEffect(() => {
+    if (!loginUser) {
+      navigate("/");
+      return;
+    }
+    if (loginUser.certStatus !== "APPROVED") {
+      alert("회사 인증이 승인된 회원만 글을 작성할 수 있습니다.");
+      navigate("/home");
+    }
+  }, [loginUser]);
+
+  // 인증 안 된 유저면 렌더링 막음
+  if (!loginUser || loginUser.certStatus !== "APPROVED") return null;
+
   const onClickSubmit = async () => {
-    // 유효성 검사
     if (!title.trim()) {
       setError("제목을 입력해주세요.");
       return;
@@ -30,14 +44,9 @@ const WritePostPage = () => {
       setError("내용을 입력해주세요.");
       return;
     }
-    if (!loginUser) {
-      setError("로그인이 필요합니다.");
-      return;
-    }
 
     setLoading(true);
     setError("");
-
     try {
       const rsp = await AxiosApi.writePost(
         loginUser.userId,
@@ -45,7 +54,6 @@ const WritePostPage = () => {
         content,
         category,
       );
-
       if (rsp.data.success) {
         navigate("/home");
       } else {
@@ -61,15 +69,14 @@ const WritePostPage = () => {
 
   return (
     <PageWrapper>
-      {/* ── 상단 타이틀 바 ── */}
+      {/* 타이틀 바 */}
       <TitleBar>
         <span style={{ fontSize: "20px" }}>✏️</span>
         <TitleText>글쓰기</TitleText>
       </TitleBar>
 
-      {/* ── 바디 ── */}
       <Body>
-        {/* 카테고리 카드 */}
+        {/* 카테고리 */}
         <Card>
           <CatHeader>
             <CatLabel>카테고리</CatLabel>
@@ -88,7 +95,7 @@ const WritePostPage = () => {
           </CatBtns>
         </Card>
 
-        {/* 제목 + 내용 카드 */}
+        {/* 제목 + 내용 */}
         <InputCard>
           <TitleInput
             placeholder="제목을 입력하세요"
@@ -110,11 +117,10 @@ const WritePostPage = () => {
           />
         </InputCard>
 
-        {/* 에러 메시지 */}
         {error && <ErrorText>{error}</ErrorText>}
       </Body>
 
-      {/* ── 하단 버튼 바 ── */}
+      {/* 하단 버튼 */}
       <BottomBar>
         <CancelBtn onClick={() => navigate(-1)}>취소</CancelBtn>
         <SubmitBtn onClick={onClickSubmit} disabled={loading}>
@@ -134,7 +140,6 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
 const TitleBar = styled.div`
   background: #ffffff;
   border-bottom: 1px solid #e1e1e1;
@@ -144,14 +149,12 @@ const TitleBar = styled.div`
   align-items: center;
   gap: 10px;
 `;
-
 const TitleText = styled.h2`
   font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
 `;
-
 const Body = styled.div`
   flex: 1;
   max-width: 720px;
@@ -162,37 +165,31 @@ const Body = styled.div`
   flex-direction: column;
   gap: 12px;
 `;
-
 const Card = styled.div`
   background: #ffffff;
   border: 1px solid #e1e1e1;
   border-radius: 12px;
   padding: 20px;
 `;
-
 const CatHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
 `;
-
 const CatLabel = styled.span`
   font-size: 14px;
   font-weight: 600;
   color: #1a1a1a;
 `;
-
 const CatRequired = styled.span`
   font-size: 12px;
   color: #999999;
 `;
-
 const CatBtns = styled.div`
   display: flex;
   gap: 8px;
 `;
-
 const CatBtn = styled.button`
   padding: 8px 18px;
   border-radius: 999px;
@@ -207,7 +204,6 @@ const CatBtn = styled.button`
     background: ${(p) => (p.active ? "#333333" : "#f5f5f5")};
   }
 `;
-
 const InputCard = styled.div`
   background: #ffffff;
   border: 1px solid #e1e1e1;
@@ -216,7 +212,6 @@ const InputCard = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
 const TitleInput = styled.input`
   border: none;
   outline: none;
@@ -232,13 +227,11 @@ const TitleInput = styled.input`
     font-weight: 400;
   }
 `;
-
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid #eeeeee;
   margin: 12px 0;
 `;
-
 const ContentInput = styled.textarea`
   border: none;
   outline: none;
@@ -248,21 +241,19 @@ const ContentInput = styled.textarea`
   border-radius: 8px;
   padding: 14px 16px;
   width: 100%;
-  min-height: 320px;
+  min-height: 300px;
   resize: none;
   line-height: 1.7;
   &::placeholder {
     color: #aaaaaa;
   }
 `;
-
 const ErrorText = styled.p`
   font-size: 13px;
   color: #e53e3e;
   text-align: center;
   margin: 0;
 `;
-
 const BottomBar = styled.div`
   background: #ffffff;
   border-top: 1px solid #e1e1e1;
@@ -273,7 +264,6 @@ const BottomBar = styled.div`
   position: sticky;
   bottom: 0;
 `;
-
 const CancelBtn = styled.button`
   padding: 10px 24px;
   border: 1px solid #e1e1e1;
@@ -287,7 +277,6 @@ const CancelBtn = styled.button`
     background: #f5f5f5;
   }
 `;
-
 const SubmitBtn = styled.button`
   padding: 10px 28px;
   border: none;

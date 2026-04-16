@@ -10,19 +10,19 @@ const AdminLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // 비로그인 or 일반 유저 → /home 으로 차단
-  // useEffect(() => {
-  //   if (!loginUser) {
-  //     navigate("/");
-  //     return;
-  //   }
-  //   if (!loginUser.isAdmin) {
-  //     alert("관리자만 접근할 수 있습니다.");
-  //     navigate("/home");
-  //   }
-  // }, [loginUser]);
+  useEffect(() => {
+    if (!loginUser) {
+      navigate("/");
+      return;
+    }
+    if (!loginUser.isAdmin) {
+      alert("관리자만 접근할 수 있습니다.");
+      navigate("/home");
+    }
+  }, [loginUser]);
 
   // 관리자 아니면 렌더링 자체를 막음
-  // if (!loginUser || !loginUser.isAdmin) return null;
+  if (!loginUser || !loginUser.isAdmin) return null;
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 

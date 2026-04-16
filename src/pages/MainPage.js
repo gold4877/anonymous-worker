@@ -25,7 +25,7 @@ function MainPage({ openAuth, searchValue = "" }) {
   // null = 전체 메인 뷰, 문자열 = 해당 카테고리 전체 뷰
   const [filterCategory, setFilterCategory] = useState(null);
 
-  const isAdmin = loginUser?.admin;
+  const isAdmin = loginUser?.isAdmin;
 
   // 페이지 로드 시 게시글 전체 조회
   useEffect(() => {
