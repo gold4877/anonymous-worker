@@ -2,6 +2,7 @@ import "./App.css";
 import { useState } from "react";
 import GlobalStyle from "./style/GlobalStyle";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import UserStore from "./context/UserStore";
 import Layout from "./pages/Layout";
 import EasterEgg from "./component/EasterEgg";
@@ -11,8 +12,11 @@ import Footer from "./component/Footer";
 import MainPage from "./pages/MainPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import WritePostPage from "./pages/WritePostPage";
-import AdminPage from "./pages/AdminPage";
 import AuthModal from "./pages/auth/AuthModal";
+import AdminLayout from "./component/AdminLayout";
+import DashBoard from "./pages/admin/DashBoard";
+import UserManagement from "./pages/admin/UserManagement";
+import PostManagement from "./pages/admin/PostManagement";
 
 function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -67,7 +71,15 @@ function App() {
               />
               <Route path="/write" element={<WritePostPage />} />
               <Route path="/post/:postId" element={<PostDetailPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+
+              <Route path="/admin" element={<AdminLayout />}>
+                {/* /admin 접속 시 바로 대시보드로 이동 */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+
+                <Route path="dashboard" element={<DashBoard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="posts" element={<PostManagement />} />
+              </Route>
             </Route>
           </Routes>
 
