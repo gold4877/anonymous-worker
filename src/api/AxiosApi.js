@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8113";
+// const BASE_URL = "http://localhost:8113";
+const BASE_URL = "http://116.36.205.25:8113";
 
 const AxiosApi = {
   // ==========================================
