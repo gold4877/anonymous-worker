@@ -1,0 +1,81 @@
+import "./App.css";
+import { useState } from "react";
+import GlobalStyle from "./style/GlobalStyle";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import UserStore from "./context/UserStore";
+import Layout from "./pages/Layout";
+import EasterEgg from "./component/EasterEgg";
+import Header from "./component/Header";
+import Footer from "./component/Footer";
+
+import MainPage from "./pages/MainPage";
+import PostDetailPage from "./pages/PostDetailPage";
+import WritePostPage from "./pages/WritePostPage";
+import AdminPage from "./pages/AdminPage";
+import AuthModal from "./pages/auth/AuthModal";
+
+function App() {
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState("login");
+  const [searchValue, setSearchValue] = useState(""); // ← 검색 상태 App으로 통합
+
+  const openAuth = (tab = "login") => {
+    setAuthTab(tab);
+    setIsAuthOpen(true);
+  };
+  const closeAuth = () => setIsAuthOpen(false);
+
+  return (
+    <>
+      <GlobalStyle />
+      <UserStore>
+        <Router>
+          <EasterEgg />
+
+          <Routes>
+            {/* "/" — 비로그인, Header/Footer 직접 포함 + 검색 연결 */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <Header
+                    openAuth={openAuth}
+                    searchValue={searchValue}
+                    onSearch={setSearchValue}
+                  />
+                  <MainPage openAuth={openAuth} searchValue={searchValue} />
+                  <Footer />
+                </>
+              }
+            />
+
+            {/* 로그인 이후 — Layout 이 Header/Footer 포함 + 검색 연결 */}
+            <Route
+              element={
+                <Layout
+                  openAuth={openAuth}
+                  searchValue={searchValue}
+                  onSearch={setSearchValue}
+                />
+              }
+            >
+              <Route
+                path="/home"
+                element={
+                  <MainPage openAuth={openAuth} searchValue={searchValue} />
+                }
+              />
+              <Route path="/write" element={<WritePostPage />} />
+              <Route path="/post/:postId" element={<PostDetailPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
+          </Routes>
+
+          <AuthModal open={isAuthOpen} close={closeAuth} initialTab={authTab} />
+        </Router>
+      </UserStore>
+    </>
+  );
+}
+
+export default App;
