@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useLocation } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
+import AxiosApi from "../../api/AxiosApi";
+import { UserContext } from "../../context/UserStore";
 
-// 1. 색상 팔레트
 const Colors = {
   Primary: "#1A1A1A",
   Accent: "#1D6BF3",
@@ -18,205 +18,148 @@ const Colors = {
   Warning: "#F6AD55",
 };
 
-// --- 유틸리티 함수: 날짜 표시 로직 ---
+const categoryLabel = { FREE: "자유", QNA: "질문/답변", INFO: "정보" };
+
 const formatDateTime = (dateStr) => {
   if (!dateStr) return "-";
-  const targetDate = new Date(dateStr);
+  const d = new Date(dateStr);
   const now = new Date();
-
-  const isToday =
-    targetDate.getFullYear() === now.getFullYear() &&
-    targetDate.getMonth() === now.getMonth() &&
-    targetDate.getDate() === now.getDate();
-
+  const isToday = d.toDateString() === now.toDateString();
   if (isToday) {
-    return dateStr.split(" ")[1].substring(0, 5);
-  } else {
-    return dateStr.split(" ")[0];
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 };
 
 const PostManagement = () => {
+  const navigate = useNavigate();
   const location = useLocation();
+  const { loginUser } = useContext(UserContext);
+
   const queryParams = new URLSearchParams(location.search);
   const authorFilter = queryParams.get("author");
-  const navigate = useNavigate();
 
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState([]);
   const [viewPost, setViewPost] = useState(null);
   const [sortConfig, setSortConfig] = useState({
-    key: "created_at",
+    key: "createdAt",
     direction: "desc",
   });
+  const [searchType, setSearchType] = useState("title");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState({ type: "", keyword: "" });
 
-  // --- 검색 관련 상태 ---
-  const [searchType, setSearchType] = useState("author"); // 기본값 작성자
-  const [searchKeyword, setSearchKeyword] = useState(""); // 입력창에 타이핑되는 값
-  const [appliedSearch, setAppliedSearch] = useState({ type: "", keyword: "" }); // 실제 검색 적용값
+  // 게시글 목록 조회
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const rsp = await AxiosApi.getPostList();
+      if (rsp.data.success) setPosts(rsp.data.data || []);
+    } catch (e) {
+      console.error("게시글 목록 조회 실패:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      category: "FREE",
-      title: "오늘 점심 메뉴 추천",
-      author: "삼성SDI/sa****",
-      views: 150,
-      likes: 5,
-      created_at: "2026-04-15 12:00:00",
-      updated_at: null,
-      isPinned: false,
-      content: "근처에 맛있는 돈까스집 생겼네요.",
-      comments: [
-        {
-          id: 101,
-          user: "user1",
-          text: "어딘가요?",
-          created_at: "2026-04-15 12:05:00",
-          updated_at: null,
-        },
-      ],
-    },
-    {
-      id: 2,
-      category: "FREE",
-      title: "주말 등산 가실 분?",
-      author: "LG전자/lg****",
-      views: 80,
-      likes: 2,
-      created_at: "2026-04-15 10:30:00",
-      updated_at: "2026-04-15 11:45:00",
-      isPinned: false,
-      content: "관악산 가려고 합니다.",
-      comments: [],
-    },
-    {
-      id: 3,
-      category: "QNA",
-      title: "React Query 질문있습니다.",
-      author: "네이버/na****",
-      views: 320,
-      likes: 8,
-      created_at: "2026-04-14 15:20:00",
-      updated_at: null,
-      isPinned: false,
-      content: "staleTime 설정은 보통 어떻게 하시나요?",
-      comments: [],
-    },
-    {
-      id: 4,
-      category: "INFO",
-      title: "이번달 업계 동향 정리",
-      author: "현대차/hy****",
-      views: 1200,
-      likes: 45,
-      created_at: "2026-04-13 09:00:00",
-      updated_at: "2026-04-14 10:00:00",
-      isPinned: true,
-      content: "상당히 흥미로운 소식들이 많네요.",
-      comments: [],
-    },
-  ]);
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  // --- 카테고리 탭 변경 시 초기화 로직 ---
+  // 단건 삭제
+  const handleDeletePost = async (post) => {
+    if (!loginUser) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+    if (!window.confirm(`[${post.title}]\n이 게시글을 삭제하시겠습니까?`))
+      return;
+    try {
+      const rsp = await AxiosApi.deletePost(post.postId, loginUser.userId);
+      if (rsp.data.success) {
+        alert("삭제 완료!");
+        setViewPost(null);
+        fetchPosts();
+      }
+    } catch (e) {
+      console.error("게시글 삭제 실패:", e);
+    }
+  };
+
+  // 선택 삭제
+  const handleBulkDelete = async () => {
+    if (!loginUser || selectedIds.length === 0) return;
+    if (!window.confirm(`선택한 ${selectedIds.length}개를 삭제하시겠습니까?`))
+      return;
+    try {
+      await Promise.all(
+        selectedIds.map((id) => AxiosApi.deletePost(id, loginUser.userId)),
+      );
+      setSelectedIds([]);
+      fetchPosts();
+    } catch (e) {
+      console.error("선택 삭제 실패:", e);
+    }
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedIds([]);
-    setSearchKeyword(""); // 입력창 비우기
-    setAppliedSearch({ type: "", keyword: "" }); // 적용된 필터 삭제
+    setSearchKeyword("");
+    setAppliedSearch({ type: "", keyword: "" });
   };
 
-  // --- 검색 실행 (버튼 클릭/엔터) ---
   const handleSearch = () => {
-    const trimmed = searchKeyword.trim();
-    if (!trimmed) {
+    if (!searchKeyword.trim()) {
       alert("검색어를 입력해주세요.");
       return;
     }
-    // 필터 적용
-    setAppliedSearch({ type: searchType, keyword: trimmed });
-    // 검색 후 입력창을 비워달라고 하셔서 추가함
+    setAppliedSearch({ type: searchType, keyword: searchKeyword.trim() });
     setSearchKeyword("");
   };
 
-  const onKeyPress = (e) => {
-    if (e.key === "Enter") handleSearch();
-  };
-
-  // --- 데이터 필터링 및 정렬 ---
   const processedPosts = useMemo(() => {
-    // 1. 카테고리 필터
     let result =
       activeTab === "ALL"
         ? [...posts]
         : posts.filter((p) => p.category === activeTab);
-
-    // 2. URL 파라미터 필터 (작성자 필터가 넘어왔을 때)
-    if (authorFilter) {
-      result = result.filter((p) => p.author.includes(authorFilter));
-    }
-
-    // 3. 우측 통합 검색창 필터
+    if (authorFilter)
+      result = result.filter((p) => (p.userName || "").includes(authorFilter));
     if (appliedSearch.keyword) {
       result = result.filter((p) => {
-        const dataValue = p[appliedSearch.type]; // author, created_at, updated_at
-        if (!dataValue) return false;
-        return String(dataValue)
-          .toLowerCase()
-          .includes(appliedSearch.keyword.toLowerCase());
+        const val = p[appliedSearch.type];
+        return (
+          val &&
+          String(val)
+            .toLowerCase()
+            .includes(appliedSearch.keyword.toLowerCase())
+        );
       });
     }
-
-    // 4. 정렬 로직 (고정글 우선 후 선택 정렬)
     result.sort((a, b) => {
-      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-      const valA = a[sortConfig.key];
-      const valB = b[sortConfig.key];
-      if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
-      if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+      if (a[sortConfig.key] < b[sortConfig.key])
+        return sortConfig.direction === "asc" ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key])
+        return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
-
     return result;
   }, [posts, activeTab, sortConfig, authorFilter, appliedSearch]);
-
-  const handleDeletePost = (id, title) => {
-    if (window.confirm(`[${title}]\n이 게시글을 정말 삭제하시겠습니까?`)) {
-      setPosts((prev) => prev.filter((p) => p.id !== id));
-      setViewPost(null);
-    }
-  };
-
-  const handleDeleteComment = (postId, commentId) => {
-    if (window.confirm("이 댓글을 삭제하시겠습니까?")) {
-      const updated = posts.map((p) =>
-        p.id === postId
-          ? { ...p, comments: p.comments.filter((c) => c.id !== commentId) }
-          : p,
-      );
-      setPosts(updated);
-      const targetPost = updated.find((p) => p.id === postId);
-      if (targetPost) setViewPost(targetPost);
-    }
-  };
 
   return (
     <Container>
       <Wrapper>
-        <Header>
-          <h1>게시글 통합 관리</h1>
+        <PageHeader>
+          <h1>게시글 관리</h1>
           {authorFilter && (
-            <div
-              style={{
-                color: Colors.Accent,
-                fontWeight: "600",
-                marginBottom: "1rem",
-              }}
-            >
-              " {authorFilter} " 사용자의 게시글만 필터링 중
-            </div>
+            <FilterNotice>
+              "{authorFilter}" 사용자의 게시글 필터링 중
+            </FilterNotice>
           )}
-        </Header>
+        </PageHeader>
 
         <TopBar>
           <TabContainer>
@@ -230,22 +173,20 @@ const PostManagement = () => {
               </Tab>
             ))}
           </TabContainer>
-
           <SearchWrapper>
             <SearchSelect
               value={searchType}
               onChange={(e) => setSearchType(e.target.value)}
             >
-              <option value="author">작성자</option>
-              <option value="created_at">작성일</option>
-              <option value="updated_at">수정일</option>
+              <option value="title">제목</option>
+              <option value="userName">작성자</option>
             </SearchSelect>
             <SearchInputBox>
               <input
                 placeholder="검색어 입력"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                onKeyDown={onKeyPress}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
               <SearchButton onClick={handleSearch}>
                 <AiOutlineSearch size={18} />
@@ -254,189 +195,117 @@ const PostManagement = () => {
           </SearchWrapper>
         </TopBar>
 
-        <ContentCard>
-          <ActionToolbar>
-            <Button
-              variant="danger"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `선택한 ${selectedIds.length}개의 글을 삭제하시겠습니까?`,
-                  )
-                ) {
-                  setPosts(posts.filter((p) => !selectedIds.includes(p.id)));
-                  setSelectedIds([]);
-                }
-              }}
-              disabled={selectedIds.length === 0}
-              style={{ opacity: selectedIds.length ? 1 : 0.4 }}
-            >
-              선택 삭제 ({selectedIds.length})
-            </Button>
-            <div style={{ fontSize: "0.85rem", color: Colors.TextMuted }}>
-              결과: {processedPosts.length}건
-            </div>
-          </ActionToolbar>
+        {loading ? (
+          <LoadingText>게시글을 불러오는 중...</LoadingText>
+        ) : (
+          <ContentCard>
+            <ActionToolbar>
+              <DeleteBtn
+                onClick={handleBulkDelete}
+                disabled={selectedIds.length === 0}
+                style={{ opacity: selectedIds.length ? 1 : 0.4 }}
+              >
+                선택 삭제 ({selectedIds.length})
+              </DeleteBtn>
+              <span style={{ fontSize: "0.85rem", color: Colors.TextMuted }}>
+                결과: {processedPosts.length}건
+              </span>
+            </ActionToolbar>
 
-          <Table>
-            <colgroup>
-              <col style={{ width: "50px" }} />
-              <col style={{ width: "60px" }} />
-              {activeTab === "ALL" && <col style={{ width: "90px" }} />}
-              <col style={{ width: "auto" }} />
-              <col style={{ width: "130px" }} />
-              <col style={{ width: "70px" }} />
-              <col style={{ width: "70px" }} />
-              <col style={{ width: "120px" }} />
-              <col style={{ width: "120px" }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedIds.length === processedPosts.length &&
-                      processedPosts.length > 0
-                    }
-                    onChange={(e) =>
-                      setSelectedIds(
-                        e.target.checked ? processedPosts.map((p) => p.id) : [],
-                      )
-                    }
-                  />
-                </th>
-                <th>ID</th>
-                {activeTab === "ALL" && <th>카테고리</th>}
-                <th>제목</th>
-                <th>작성자</th>
-                <th>조회</th>
-                <th>좋아요</th>
-                <th>작성일</th>
-                <th>수정일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {processedPosts.map((post) => (
-                <tr
-                  key={post.id}
-                  style={{
-                    background: post.isPinned ? "#FFFBEB" : "transparent",
-                  }}
-                >
-                  <td>
+            <Table>
+              <thead>
+                <tr>
+                  <th>
                     <input
                       type="checkbox"
-                      checked={selectedIds.includes(post.id)}
-                      onChange={() =>
-                        setSelectedIds((prev) =>
-                          prev.includes(post.id)
-                            ? prev.filter((i) => i !== post.id)
-                            : [...prev, post.id],
+                      checked={
+                        selectedIds.length === processedPosts.length &&
+                        processedPosts.length > 0
+                      }
+                      onChange={(e) =>
+                        setSelectedIds(
+                          e.target.checked
+                            ? processedPosts.map((p) => p.postId)
+                            : [],
                         )
                       }
                     />
-                  </td>
-                  <td>{post.id}</td>
-                  {activeTab === "ALL" && (
+                  </th>
+                  <th>ID</th>
+                  {activeTab === "ALL" && <th>카테고리</th>}
+                  <th>제목</th>
+                  <th>작성자</th>
+                  <th>조회</th>
+                  <th>좋아요</th>
+                  <th>작성일</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processedPosts.map((post) => (
+                  <tr key={post.postId}>
                     <td>
-                      <Badge>{post.category}</Badge>
-                    </td>
-                  )}
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <PinIcon
-                        isPinned={post.isPinned}
-                        onClick={() =>
-                          setPosts(
-                            posts.map((p) =>
-                              p.id === post.id
-                                ? { ...p, isPinned: !p.isPinned }
-                                : p,
-                            ),
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(post.postId)}
+                        onChange={() =>
+                          setSelectedIds((prev) =>
+                            prev.includes(post.postId)
+                              ? prev.filter((i) => i !== post.postId)
+                              : [...prev, post.postId],
                           )
                         }
-                      >
-                        ★
-                      </PinIcon>
+                      />
+                    </td>
+                    <td>{post.postId}</td>
+                    {activeTab === "ALL" && (
+                      <td>
+                        <CategoryBadge>
+                          {categoryLabel[post.category] || post.category}
+                        </CategoryBadge>
+                      </td>
+                    )}
+                    <td>
                       <TitleText onClick={() => setViewPost(post)}>
                         {post.title}
                       </TitleText>
-                    </div>
-                  </td>
-                  <td>{post.author}</td>
-                  <td>{post.views}</td>
-                  <td>{post.likes}</td>
-                  <td>{formatDateTime(post.created_at)}</td>
-                  <td>
-                    {post.updated_at ? formatDateTime(post.updated_at) : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </ContentCard>
+                    </td>
+                    <td>
+                      {post.companyName ? `[${post.companyName}]` : "[무소속]"}{" "}
+                      {post.maskedEmail}
+                    </td>
+                    <td>{post.viewCount}</td>
+                    <td>{post.likeCount}</td>
+                    <td>{formatDateTime(post.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </ContentCard>
+        )}
       </Wrapper>
 
-      {/* 게시글 상세 보기 모달 */}
+      {/* 게시글 상세 모달 */}
       {viewPost && (
         <ModalOverlay onClick={() => setViewPost(null)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <h2>{viewPost.title}</h2>
-              <Badge>{viewPost.category}</Badge>
+              <CategoryBadge>
+                {categoryLabel[viewPost.category] || viewPost.category}
+              </CategoryBadge>
             </ModalHeader>
-            <div
-              style={{ margin: "1rem 0", fontSize: "0.9rem", color: "#666" }}
-            >
-              작성자: {viewPost.author} | 작성일: {viewPost.created_at}
-            </div>
-            <div
-              style={{
-                minHeight: "150px",
-                padding: "1rem",
-                background: "#f9f9f9",
-                borderRadius: "8px",
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {viewPost.content}
-            </div>
-            <h3 style={{ marginTop: "1.5rem", fontSize: "1rem" }}>
-              댓글 ({viewPost.comments.length})
-            </h3>
-            <CommentSection>
-              {viewPost.comments.length === 0 ? (
-                <p style={{ color: "#999" }}>댓글이 없습니다.</p>
-              ) : (
-                viewPost.comments.map((c) => (
-                  <CommentItem key={c.id}>
-                    <div>
-                      <strong>{c.user}</strong>: {c.text}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteComment(viewPost.id, c.id)}
-                      style={{
-                        color: Colors.Error,
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                      }}
-                    >
-                      삭제
-                    </button>
-                  </CommentItem>
-                ))
-              )}
-            </CommentSection>
+            <ModalMeta>
+              작성자:{" "}
+              {viewPost.companyName ? `[${viewPost.companyName}]` : "[무소속]"}{" "}
+              {viewPost.maskedEmail}
+              &nbsp;| 작성일: {formatDateTime(viewPost.createdAt)}
+            </ModalMeta>
+            <ModalBody>{viewPost.content}</ModalBody>
             <ModalFooter>
-              <Button
-                variant="danger"
-                onClick={() => handleDeletePost(viewPost.id, viewPost.title)}
-              >
+              <DeleteBtn onClick={() => handleDeletePost(viewPost)}>
                 게시글 삭제
-              </Button>
-              <Button onClick={() => setViewPost(null)}>닫기</Button>
+              </DeleteBtn>
+              <CloseBtn onClick={() => setViewPost(null)}>닫기</CloseBtn>
             </ModalFooter>
           </ModalContent>
         </ModalOverlay>
@@ -447,23 +316,28 @@ const PostManagement = () => {
 
 export default PostManagement;
 
-// --- Styled Components ---
+// ─── 스타일 ──────────────────────────────────────────────────
 const Container = styled.div`
   min-height: 100vh;
   padding: 2rem;
-  background-color: ${Colors.BgMain};
+  background: ${Colors.BgMain};
 `;
 const Wrapper = styled.div`
   max-width: 1100px;
   margin: 0 auto;
 `;
-const Header = styled.header`
+const PageHeader = styled.header`
   margin-bottom: 2rem;
   h1 {
     font-size: 1.5rem;
     font-weight: 700;
     color: ${Colors.Primary};
   }
+`;
+const FilterNotice = styled.div`
+  color: ${Colors.Accent};
+  font-weight: 600;
+  margin-top: 0.5rem;
 `;
 const TopBar = styled.div`
   display: flex;
@@ -478,14 +352,12 @@ const TabContainer = styled.div`
 const Tab = styled.div`
   padding: 12px 24px;
   cursor: pointer;
-  background-color: ${(props) =>
-    props.active ? Colors.BgCard : "transparent"};
-  border: 1px solid ${(props) => (props.active ? Colors.Border : "transparent")};
-  border-bottom: ${(props) =>
-    props.active ? `2px solid ${Colors.BgCard}` : "none"};
+  background: ${(p) => (p.active ? Colors.BgCard : "transparent")};
+  border: 1px solid ${(p) => (p.active ? Colors.Border : "transparent")};
+  border-bottom: ${(p) => (p.active ? `2px solid ${Colors.BgCard}` : "none")};
   border-radius: 8px 8px 0 0;
-  font-weight: ${(props) => (props.active ? "700" : "500")};
-  color: ${(props) => (props.active ? Colors.Accent : Colors.TextMuted)};
+  font-weight: ${(p) => (p.active ? 700 : 500)};
+  color: ${(p) => (p.active ? Colors.Accent : Colors.TextMuted)};
   margin-bottom: -1px;
   z-index: 1;
 `;
@@ -525,7 +397,7 @@ const SearchButton = styled.button`
   color: ${Colors.TextMuted};
 `;
 const ContentCard = styled.div`
-  background-color: ${Colors.BgCard};
+  background: ${Colors.BgCard};
   border: 1px solid ${Colors.Border};
   border-radius: 0 0 12px 12px;
   padding: 1.5rem;
@@ -541,7 +413,7 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   th {
-    background-color: #fafafa;
+    background: #fafafa;
     padding: 1rem;
     font-size: 0.85rem;
     color: ${Colors.TextMuted};
@@ -549,15 +421,18 @@ const Table = styled.table`
     text-align: left;
   }
   td {
-    padding: 1.1rem 1rem;
+    padding: 1rem;
     font-size: 0.85rem;
     border-bottom: 1px solid ${Colors.Border};
   }
 `;
-const PinIcon = styled.span`
-  cursor: pointer;
-  margin-right: 12px;
-  color: ${(props) => (props.isPinned ? Colors.Warning : "#DDD")};
+const CategoryBadge = styled.span`
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: ${Colors.BgInput};
+  color: ${Colors.TextMuted};
 `;
 const TitleText = styled.span`
   cursor: pointer;
@@ -566,38 +441,37 @@ const TitleText = styled.span`
     text-decoration: underline;
   }
 `;
-const Badge = styled.span`
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  background-color: ${Colors.BgInput};
-  color: ${Colors.TextMuted};
-`;
-const Button = styled.button`
+const DeleteBtn = styled.button`
   padding: 10px 20px;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid
-    ${(props) => (props.variant === "danger" ? Colors.Error : Colors.Border)};
-  background-color: ${(props) =>
-    props.variant === "danger"
-      ? Colors.Error
-      : props.variant === "primary"
-        ? Colors.Primary
-        : "white"};
-  color: ${(props) =>
-    props.variant === "danger" || props.variant === "primary"
-      ? "white"
-      : Colors.Primary};
+  border: 1px solid ${Colors.Error};
+  background: ${Colors.Error};
+  color: white;
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+`;
+const CloseBtn = styled.button`
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid ${Colors.Border};
+  background: white;
+  color: ${Colors.Primary};
+`;
+const LoadingText = styled.p`
+  text-align: center;
+  padding: 60px 0;
+  color: ${Colors.TextMuted};
+  font-size: 14px;
 `;
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -619,21 +493,27 @@ const ModalHeader = styled.div`
   align-items: center;
   border-bottom: 1px solid ${Colors.Border};
   padding-bottom: 1rem;
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+`;
+const ModalMeta = styled.div`
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: #666;
+`;
+const ModalBody = styled.div`
+  min-height: 100px;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
 `;
 const ModalFooter = styled.div`
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-`;
-const CommentSection = styled.div`
-  margin-top: 1rem;
-  border-top: 1px solid ${Colors.Border};
-`;
-const CommentItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding: 0.8rem 0;
-  border-bottom: 1px dotted #eee;
-  font-size: 0.85rem;
 `;

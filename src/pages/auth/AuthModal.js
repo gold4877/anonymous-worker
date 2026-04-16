@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Modal from "../../component/Modal";
 import Login from "./Login";
@@ -7,18 +6,11 @@ import SignUp from "./SignUp";
 
 const AuthModal = ({ open, close, initialTab = "login" }) => {
   const [tab, setTab] = useState(initialTab);
-  const navigate = useNavigate();
 
-  // 모달이 열릴 때마다 initialTab으로 리셋
+  // 모달 열릴 때마다 initialTab 으로 리셋
   useEffect(() => {
     if (open) setTab(initialTab);
   }, [open, initialTab]);
-
-  // 회원가입 완료 후 실행
-  const handleSignUpClose = () => {
-    close(); // 모달 닫기
-    navigate("/home"); // 홈으로 이동
-  };
 
   return (
     <Modal open={open} close={close} header="">
@@ -35,7 +27,7 @@ const AuthModal = ({ open, close, initialTab = "login" }) => {
       {tab === "signup" && (
         <SignUp
           switchToLogin={() => setTab("login")}
-          onClose={handleSignUpClose}
+          onClose={close} // ← Step 4 완료/스킵 시 모달 닫기용
         />
       )}
     </Modal>
@@ -59,8 +51,8 @@ const Tab = styled.button`
   border: none;
   cursor: pointer;
   background: none;
-  color: ${(p) => (p.active ? "#1A1A1A" : "#999999")};
+  color: ${(p) => (p.active ? "#1a1a1a" : "#999999")};
   border-bottom: ${(p) =>
-    p.active ? "2px solid #1A1A1A" : "2px solid transparent"};
+    p.active ? "2px solid #1a1a1a" : "2px solid transparent"};
   transition: all 0.15s;
 `;
