@@ -16,11 +16,12 @@ const AxiosApi = {
   // 회원가입
   // 요청: { email, password, name }
   // 응답: { success, message, data: null }
-  SignUp: async (email, password, name, companyName) => {
+  SignUp: async (email, password, name, companyName, age) => {
     return await axios.post(`${BASE_URL}/api/auth/signup`, {
       email,
       password,
       name,
+      age,
       companyName,
     });
   },

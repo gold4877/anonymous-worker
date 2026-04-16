@@ -66,14 +66,12 @@ const Input = styled.input`
     color: #aaaaaa;
     font-size: 14px;
   }
-
   &:focus {
     outline: none;
     border-color: #1d6bf3;
     background-color: #ffffff;
     box-shadow: 0 0 0 3px rgba(29, 107, 243, 0.1);
   }
-
   &:disabled {
     background-color: #f0f0f0;
     cursor: not-allowed;
@@ -100,11 +98,9 @@ const EyeButton = styled.button`
   color: #aaaaaa;
   transition: color 0.2s;
   border-radius: 4px;
-
   &:hover {
     color: #1d6bf3;
   }
-
   &:focus {
     outline: 2px solid rgba(29, 107, 243, 0.3);
   }
@@ -155,15 +151,12 @@ const Button = styled.button`
   transition:
     background-color 0.2s,
     transform 0.1s;
-
   &:hover:not(:disabled) {
     background-color: #155ab5;
   }
-
   &:active:not(:disabled) {
     transform: scale(0.98);
   }
-
   &:disabled {
     background-color: #c0cfe8;
     cursor: not-allowed;
@@ -180,13 +173,30 @@ const SubButton = styled.button`
   font-size: 15px;
   font-weight: 500;
   transition: all 0.2s;
-
   &:hover {
     background-color: #f5f5f5;
     border-color: #1d6bf3;
     color: #1d6bf3;
   }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
 
+const GhostButton = styled.button`
+  padding: 14px;
+  background-color: transparent;
+  color: #9ca3af;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+  &:hover {
+    color: #555;
+  }
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -197,7 +207,6 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
   flex-direction: ${(props) => (props.row ? "row" : "column")};
-
   button {
     flex: 1;
   }
@@ -244,11 +253,9 @@ const CheckboxLabel = styled.label`
   user-select: none;
   color: #333;
   transition: color 0.2s;
-
   &:hover {
     color: #1d6bf3;
   }
-
   input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -256,14 +263,12 @@ const CheckboxLabel = styled.label`
     accent-color: #1d6bf3;
     flex-shrink: 0;
   }
-
   &.all {
     font-weight: 600;
     color: #1a1a1a;
     padding-bottom: 10px;
     border-bottom: 1px solid #e5e5e5;
   }
-
   .badge {
     margin-left: auto;
     font-size: 11px;
@@ -272,19 +277,16 @@ const CheckboxLabel = styled.label`
     border-radius: 4px;
     flex-shrink: 0;
   }
-
   &.required .badge {
     background-color: #fee2e2;
     color: #dc2626;
   }
-
   &.optional .badge {
     background-color: #f3f4f6;
     color: #9ca3af;
   }
 `;
 
-// ===== 비밀번호 강도 =====
 const StrengthBarWrap = styled.div`
   margin-top: 10px;
 `;
@@ -318,7 +320,6 @@ const StrengthText = styled.span`
   color: ${(props) => props.color};
   font-weight: 600;
 `;
-
 const StrengthHint = styled.span`
   font-size: 11px;
   color: #aaaaaa;
@@ -353,16 +354,31 @@ const FieldBlock = styled.div`
   width: 100%;
 `;
 
-//   선택 입력 필드 안내 레이블
 const FieldLabel = styled.p`
   font-size: 12px;
   color: #888888;
   margin: 0 0 6px 2px;
-
   span {
     font-size: 11px;
     color: #9ca3af;
     margin-left: 4px;
+  }
+`;
+
+const InfoBox = styled.div`
+  padding: 14px 16px;
+  background-color: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.6;
+
+  strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: #1d4ed8;
   }
 `;
 
@@ -402,24 +418,21 @@ const getPasswordStrength = (pw) => {
   };
 };
 
-const SignUp = ({ switchToLogin }) => {
+const SignUp = ({ switchToLogin, handleLogin, onClose }) => {
   const [step, setStep] = useState(1);
 
+  // Step 1~3 상태
   const [email, setEmail] = useState("");
   const [nick, setNick] = useState("");
-  const [companyName, setCompanyName] = useState(""); //   회사명 추가
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
-
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
-
   const [error, setError] = useState("");
   const [emailMsg, setEmailMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailValid, setEmailValid] = useState(null);
-
   const [agree, setAgree] = useState({
     all: false,
     terms: false,
@@ -427,6 +440,13 @@ const SignUp = ({ switchToLogin }) => {
     age: false,
     marketing: false,
   });
+
+  // Step 4 상태 (회사 인증)
+  const [userId, setUserId] = useState(null);
+  const [name, setname] = useState("");
+  const [age, setAge] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [certLoading, setCertLoading] = useState(false);
 
   const passwordStrength = getPasswordStrength(pw);
 
@@ -481,7 +501,7 @@ const SignUp = ({ switchToLogin }) => {
 
   const isStep1Valid = agree.terms && agree.privacy && agree.age;
 
-  // ===== STEP 이동 =====
+  // ===== Step 2 → Step 3 =====
   const handleNext = () => {
     if (emailValid !== true) {
       setError("올바른 이메일을 입력해주세요.");
@@ -491,7 +511,7 @@ const SignUp = ({ switchToLogin }) => {
     setStep(3);
   };
 
-  // ===== 회원가입 =====
+  // ===== Step 3 회원가입 → 로그인 → Step 4 =====
   const handleSubmit = async () => {
     if (!nick || !pw || !pw2) {
       setError("닉네임과 비밀번호를 입력해주세요.");
@@ -508,20 +528,70 @@ const SignUp = ({ switchToLogin }) => {
 
     try {
       setLoading(true);
-      //   companyName 같이 전달 (백엔드 파라미터 순서 확인 필요)
-      const rsp = await AxiosApi.SignUp(email, pw, nick, companyName || null);
-      if (rsp.data.success) {
-        alert("회원가입 완료!");
+      setError("");
+
+      // 1) 회원가입
+      const signUpRsp = await AxiosApi.SignUp(email, pw, nick);
+      if (!signUpRsp.data.success) {
+        setError(signUpRsp.data.message || "회원가입에 실패했습니다.");
+        return;
+      }
+
+      // 2) 자동 로그인
+      const loginRsp = await AxiosApi.login(email, pw);
+      if (!loginRsp.data.success) {
+        setError("로그인에 실패했습니다. 직접 로그인해 주세요.");
         switchToLogin();
-      } else {
-        setError(rsp.data.message || "회원가입 실패");
+        return;
+      }
+
+      const acquiredUserId = loginRsp.data.userId ?? loginRsp.data.data?.userId;
+      setUserId(acquiredUserId);
+
+      // 3) handleLogin 호출로 앱 전역 인증 상태 처리
+      if (typeof handleLogin === "function") {
+        await handleLogin(loginRsp.data);
+      }
+
+      // 4) Step 4로 이동
+      setStep(4);
+    } catch (e) {
+      setError(e.response?.data?.message || "처리 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== Step 4 인증 신청 =====
+  const handleApplyCertification = async () => {
+    if (!name || !age || !companyName) {
+      setError("실명, 나이, 회사명을 모두 입력해주세요.");
+      return;
+    }
+    if (isNaN(age) || Number(age) < 1 || Number(age) > 120) {
+      setError("올바른 나이를 입력해주세요.");
+      return;
+    }
+
+    try {
+      setCertLoading(true);
+      setError("");
+      await AxiosApi.applyCertification({
+        userId,
+        name,
+        age: Number(age),
+        companyName,
+      });
+      // 모달 닫기 및 홈 이동
+      if (typeof onClose === "function") {
+        onClose();
       }
     } catch (e) {
       setError(
-        e.response?.data?.message || "회원가입 처리 중 오류가 발생했습니다.",
+        e.response?.data?.message || "인증 신청 중 오류가 발생했습니다.",
       );
     } finally {
-      setLoading(false);
+      setCertLoading(false);
     }
   };
 
@@ -532,6 +602,7 @@ const SignUp = ({ switchToLogin }) => {
         <>
           <StepIndicator>
             <div className="active" />
+            <div />
             <div />
             <div />
           </StepIndicator>
@@ -588,7 +659,13 @@ const SignUp = ({ switchToLogin }) => {
 
           {error && <ErrorText>{error}</ErrorText>}
 
-          <Button disabled={!isStep1Valid} onClick={() => setStep(2)}>
+          <Button
+            disabled={!isStep1Valid}
+            onClick={() => {
+              setError("");
+              setStep(2);
+            }}
+          >
             다음
           </Button>
         </>
@@ -600,6 +677,7 @@ const SignUp = ({ switchToLogin }) => {
           <StepIndicator>
             <div />
             <div className="active" />
+            <div />
             <div />
           </StepIndicator>
 
@@ -626,7 +704,14 @@ const SignUp = ({ switchToLogin }) => {
           {error && <ErrorText>{error}</ErrorText>}
 
           <ButtonGroup row>
-            <SubButton onClick={() => setStep(1)}>이전</SubButton>
+            <SubButton
+              onClick={() => {
+                setError("");
+                setStep(1);
+              }}
+            >
+              이전
+            </SubButton>
             <Button
               onClick={handleNext}
               disabled={emailValid !== true || emailLoading}
@@ -637,13 +722,14 @@ const SignUp = ({ switchToLogin }) => {
         </>
       )}
 
-      {/* STEP 3 — 정보 입력 */}
+      {/* STEP 3 — 닉네임 + 비밀번호 */}
       {step === 3 && (
         <>
           <StepIndicator>
             <div />
             <div />
             <div className="active" />
+            <div />
           </StepIndicator>
 
           <Title>정보 입력</Title>
@@ -658,19 +744,6 @@ const SignUp = ({ switchToLogin }) => {
               placeholder="사용할 닉네임을 입력해주세요"
               value={nick}
               onChange={(e) => setNick(e.target.value)}
-              disabled={loading}
-            />
-          </FieldBlock>
-
-          {/*   회사명 / 소속 */}
-          <FieldBlock>
-            <FieldLabel>
-              회사명 / 소속 <span>선택 · 미입력 시 [무소속] 표시</span>
-            </FieldLabel>
-            <PlainInput
-              placeholder="예) 카카오, 네이버, 스타트업 등"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
               disabled={loading}
             />
           </FieldBlock>
@@ -697,7 +770,6 @@ const SignUp = ({ switchToLogin }) => {
                 <EyeIcon open={showPw} />
               </EyeButton>
             </InputWrapper>
-
             {pw && (
               <StrengthBarWrap>
                 <StrengthBar>
@@ -738,7 +810,6 @@ const SignUp = ({ switchToLogin }) => {
                 <EyeIcon open={showPw2} />
               </EyeButton>
             </InputWrapper>
-
             {pw2 && (
               <ValidationText valid={pw === pw2}>
                 {pw === pw2
@@ -751,16 +822,95 @@ const SignUp = ({ switchToLogin }) => {
           {error && <ErrorText>{error}</ErrorText>}
 
           <ButtonGroup row>
-            <SubButton onClick={() => setStep(2)} disabled={loading}>
+            <SubButton
+              onClick={() => {
+                setError("");
+                setStep(2);
+              }}
+              disabled={loading}
+            >
               이전
             </SubButton>
             <Button
               onClick={handleSubmit}
               disabled={!nick || !pw || !pw2 || pw !== pw2 || loading}
             >
-              {loading ? "가입 중..." : "가입 완료"}
+              {loading ? "처리 중..." : "가입 완료"}
             </Button>
           </ButtonGroup>
+        </>
+      )}
+
+      {/* STEP 4 — 회사 인증 신청 (선택) */}
+      {step === 4 && (
+        <>
+          <StepIndicator>
+            <div />
+            <div />
+            <div />
+            <div className="active" />
+          </StepIndicator>
+
+          <Title>회사 인증 신청</Title>
+          <Subtitle>인증 시 더 많은 기능을 이용할 수 있어요</Subtitle>
+
+          <InfoBox>
+            <strong>🎉 가입을 축하해요!</strong>
+            회사 인증은 선택 사항이에요.
+          </InfoBox>
+
+          {/* 실명 */}
+          <FieldBlock>
+            <FieldLabel>
+              실명 <span>필수</span>
+            </FieldLabel>
+            <PlainInput
+              placeholder="홍길동"
+              value={name}
+              onChange={(e) => setname(e.target.value)}
+              disabled={certLoading}
+            />
+          </FieldBlock>
+
+          {/* 나이 */}
+          <FieldBlock>
+            <FieldLabel>
+              나이 <span>필수</span>
+            </FieldLabel>
+            <PlainInput
+              type="number"
+              placeholder="예) 28"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              disabled={certLoading}
+              min={1}
+              max={120}
+            />
+          </FieldBlock>
+
+          {/* 회사명 */}
+          <FieldBlock>
+            <FieldLabel>
+              회사명 / 소속 <span>필수</span>
+            </FieldLabel>
+            <PlainInput
+              placeholder="예) 카카오, 네이버, 스타트업 등"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              disabled={certLoading}
+            />
+          </FieldBlock>
+
+          {error && <ErrorText>{error}</ErrorText>}
+
+          <Button
+            onClick={handleApplyCertification}
+            disabled={!name || !age || !companyName || certLoading}
+          >
+            {certLoading ? "신청 중..." : "인증 신청하기"}
+          </Button>
+
+          <GhostButton onClick={onClose}>다음에 할게요</GhostButton>
         </>
       )}
     </Container>
