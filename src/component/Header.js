@@ -2,61 +2,24 @@ import styled from "styled-components";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserStore";
+// ✨ [변경] SVG를 ReactComponent로 import합니다.
+// src/assets/team404-logo.svg 파일을 React 컴포넌트로 가져옵니다.
+import { ReactComponent as LogoSvg } from "../assets/team404-logo.svg";
 
 const Header = ({ openAuth, searchValue = "", onSearch }) => {
   const navigate = useNavigate();
   const { loginUser, handleLogout } = useContext(UserContext);
-
   const onClickLogout = () => {
     handleLogout();
     navigate("/");
   };
-
   return (
     <HeaderWrap>
-      {/* 로고 */}
+      {/* ✨ [변경] SVG 컴포넌트를 직접 렌더링합니다. */}
       <Logo onClick={() => navigate(loginUser ? "/home" : "/")}>
-        <svg width="148" height="40" viewBox="0 0 148 40">
-          <rect
-            x="0"
-            y="2"
-            width="26"
-            height="36"
-            rx="8"
-            fill="#FFFFFF"
-            stroke="#E1E1E1"
-            strokeWidth="1.2"
-          />
-          <rect x="0" y="2" width="26" height="12" rx="8" fill="#1D6BF3" />
-          <rect x="0" y="8" width="26" height="6" fill="#1D6BF3" />
-          <rect x="9" y="0" width="8" height="8" rx="4" fill="#1558D0" />
-          <circle cx="13" cy="24" r="5" fill="#E0E0E0" />
-          <rect x="3" y="31" width="20" height="2.5" rx="1.25" fill="#DDDDDD" />
-          <rect x="3" y="35" width="13" height="2.5" rx="1.25" fill="#EEEEEE" />
-          <text
-            x="34"
-            y="20"
-            fill="#1A1A1A"
-            fontSize="14"
-            fontWeight="900"
-            fontFamily="-apple-system,BlinkMacSystemFont,sans-serif"
-            letterSpacing="-0.3"
-          >
-            team <tspan fill="#1D6BF3">404</tspan>
-          </text>
-          <text
-            x="34"
-            y="31"
-            fill="#AAAAAA"
-            fontSize="7"
-            fontFamily="-apple-system,sans-serif"
-            letterSpacing="2.5"
-          >
-            WORKERS ONLY
-          </text>
-        </svg>
+        {/* LogoSvg는 일반 React 컴포넌트이므로 직접 사용 가능 */}
+        <LogoSvg />
       </Logo>
-
       {/* 검색바 — onSearch 있을 때만 입력 가능 */}
       <SearchWrap>
         <SearchIcon>🔍</SearchIcon>
@@ -67,7 +30,6 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
           readOnly={!onSearch}
         />
       </SearchWrap>
-
       {/* 버튼 영역 */}
       <BtnGroup>
         {loginUser ? (
@@ -90,9 +52,7 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
     </HeaderWrap>
   );
 };
-
 export default Header;
-
 // ─── 스타일 ──────────────────────────────────────────────────
 const HeaderWrap = styled.header`
   background: #ffffff;
@@ -106,20 +66,23 @@ const HeaderWrap = styled.header`
   top: 0;
   z-index: 100;
 `;
-
 const Logo = styled.div`
   cursor: pointer;
   display: flex;
   align-items: center;
   flex-shrink: 0;
-`;
 
+  /* ✨ [변경] SVG 크기를 조정합니다. */
+  svg {
+    height: 40px;
+    width: auto;
+  }
+`;
 const SearchWrap = styled.div`
   flex: 1;
   max-width: 480px;
   position: relative;
 `;
-
 const SearchIcon = styled.span`
   position: absolute;
   left: 12px;
@@ -127,7 +90,6 @@ const SearchIcon = styled.span`
   transform: translateY(-50%);
   font-size: 14px;
 `;
-
 const SearchInput = styled.input`
   width: 100%;
   padding: 9px 16px 9px 38px;
@@ -145,21 +107,18 @@ const SearchInput = styled.input`
     background: #ffffff;
   }
 `;
-
 const BtnGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
 `;
-
 const UserName = styled.span`
   font-size: 13px;
   font-weight: 500;
   color: #1a1a1a;
   white-space: nowrap;
 `;
-
 const OutlineBtn = styled.button`
   padding: 7px 16px;
   border: 1px solid #e1e1e1;
@@ -174,7 +133,6 @@ const OutlineBtn = styled.button`
     background: #f5f5f5;
   }
 `;
-
 const PrimaryBtn = styled.button`
   padding: 7px 16px;
   border: none;
