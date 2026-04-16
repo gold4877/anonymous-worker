@@ -560,8 +560,6 @@ const SignUp = ({ switchToLogin, onClose }) => {
       }
 
       const acquiredUserId = loginRsp.data.userId ?? loginRsp.data.data?.userId;
-      console.log("🔥 로그인 응답:", loginRsp.data);
-      console.log("🔥 userId 확인:", acquiredUserId);
       setUserId(acquiredUserId);
 
       if (typeof handleLogin === "function") {
@@ -579,11 +577,6 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
   // ===== Step 4 인증 신청 =====
   const handleApplyCertification = async () => {
-    console.log("🔥 최종 userId:", userId);
-    console.log("🔥 realName:", realName);
-    console.log("🔥 age:", age);
-    console.log("🔥 companyName:", companyName);
-
     if (!realName || !age || !companyName) {
       setError("실명, 나이, 회사명을 모두 입력해주세요.");
       return;
@@ -873,8 +866,7 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
           <InfoBox>
             <strong>🎉 가입을 축하해요!</strong>
-            회사 인증은 선택 사항이에요. 나중에 마이페이지에서도 신청할 수
-            있어요.
+            회사 인증은 선택 사항이에요.
           </InfoBox>
 
           {/* 실명 */}
