@@ -59,7 +59,6 @@ const Subtitle = styled.p`
   margin: 0 0 4px;
 `;
 
-/* 눈 아이콘을 품는 래퍼 */
 const InputWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -98,7 +97,6 @@ const Input = styled.input`
   }
 `;
 
-/* 이메일처럼 오른쪽 패딩 불필요한 필드 */
 const PlainInput = styled(Input)`
   padding-right: 16px;
 `;
