@@ -1,18 +1,8 @@
 import styled from "styled-components";
-import { useState } from "react";
 
 function PostCard({ post }) {
-  const [isLiked, setIsLiked] = useState(false);
-
-  const handleLikeToggle = (e) => {
-    e.stopPropagation();
-    setIsLiked(!isLiked);
-  };
-
-  // 작성자 표시
   const authorLabel = post.companyName ? `[${post.companyName}]` : "[무소속]";
 
-  // 시간 포맷팅
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -26,15 +16,14 @@ function PostCard({ post }) {
     if (diffHours < 24) return `${diffHours}시간 전`;
     if (diffDays < 7) return `${diffDays}일 전`;
 
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const ampm = hours >= 12 ? "오후" : "오전";
-    const hours12 = String(hours % 12 || 12).padStart(2, "0");
-
-    return `${year}. ${month}. ${day}. ${ampm} ${hours12}:${minutes}`;
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const h = date.getHours();
+    const min = String(date.getMinutes()).padStart(2, "0");
+    const ampm = h >= 12 ? "오후" : "오전";
+    const h12 = String(h % 12 || 12).padStart(2, "0");
+    return `${y}. ${m}. ${d}. ${ampm} ${h12}:${min}`;
   };
 
   return (
@@ -42,9 +31,11 @@ function PostCard({ post }) {
       <CardHeader>
         <AuthorInfo>
           <CompanyBadge>{authorLabel}</CompanyBadge>
-          <Nickname>{post.nickname}</Nickname>
+          <Nickname>{post.nickname || post.userName}</Nickname>
         </AuthorInfo>
-        <MoreButton title="더보기">⋮</MoreButton>
+        <MoreButton title="더보기" onClick={(e) => e.stopPropagation()}>
+          ⋮
+        </MoreButton>
       </CardHeader>
 
       <CardTitle>{post.title}</CardTitle>
@@ -53,19 +44,16 @@ function PostCard({ post }) {
         <Stats>
           <Stat>
             <Icon>💬</Icon>
-            {post.commentCount}
+            {post.commentCount ?? 0}
           </Stat>
-          <Stat
-            onClick={handleLikeToggle}
-            style={{ cursor: "pointer" }}
-            title="좋아요"
-          >
-            <Icon>{isLiked ? "❤️" : "🤍"}</Icon>
-            {post.likeCount + (isLiked ? 1 : 0)}
+          {/* 좋아요 — 표시만, 클릭 시 카드 전체 onClick(상세이동) 발동 */}
+          <Stat>
+            <Icon>🤍</Icon>
+            {post.likeCount ?? 0}
           </Stat>
           <Stat>
             <Icon>👁️</Icon>
-            {post.viewCount}
+            {post.viewCount ?? 0}
           </Stat>
         </Stats>
         <Time>{formatTime(post.createdAt)}</Time>
@@ -83,7 +71,6 @@ const CardWrapper = styled.div`
   padding: 16px;
   border: 1px solid #e1e1e1;
   transition: box-shadow 0.2s;
-
   &:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
@@ -120,8 +107,6 @@ const MoreButton = styled.button`
   font-size: 20px;
   cursor: pointer;
   padding: 0;
-  transition: color 0.2s;
-
   &:hover {
     color: #1a1a1a;
   }
@@ -131,7 +116,7 @@ const CardTitle = styled.h3`
   font-size: 16px;
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 12px 0;
+  margin: 0 0 12px;
   line-height: 1.4;
 `;
 
