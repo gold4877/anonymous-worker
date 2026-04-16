@@ -1,29 +1,37 @@
 import { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import AxiosApi from "../../api/AxiosApi";
+
+// ===== 애니메이션 =====
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
 
 // ===== 스타일 =====
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   max-width: 400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 28px 24px;
+  animation: ${fadeIn} 0.25s ease;
 `;
 
 const StepIndicator = styled.div`
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 4px;
   justify-content: center;
+  align-items: center;
 
   div {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: ${(props) => props.color || "#e1e1e1"};
-    transition: 0.3s;
+    background-color: #e1e1e1;
+    transition: all 0.3s ease;
   }
 
   div.active {
@@ -33,65 +41,155 @@ const StepIndicator = styled.div`
   }
 `;
 
-const Input = styled.input`
-  padding: 16px;
-  border-radius: 6px;
-  border: 1px solid #e1e1e1;
-  background-color: #f9f9f9;
-  font-size: 16px;
-  min-height: 48px;
+const InputWrapper = styled.div`
+  position: relative;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.3s;
+`;
+
+const Input = styled.input`
+  padding: 14px 44px 14px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e1e1e1;
+  background-color: #f9f9f9;
+  font-size: 15px;
+  height: 52px;
+  width: 100%;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+  color: #1a1a1a;
+
+  &::placeholder {
+    color: #aaaaaa;
+    font-size: 14px;
+  }
 
   &:focus {
     outline: none;
     border-color: #1d6bf3;
     background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(29, 107, 243, 0.1);
   }
 
   &:disabled {
     background-color: #f0f0f0;
     cursor: not-allowed;
+    color: #999;
   }
 `;
 
+const PlainInput = styled(Input)`
+  padding-right: 16px;
+`;
+
+const EyeButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaaaaa;
+  transition: color 0.2s;
+  border-radius: 4px;
+
+  &:hover {
+    color: #1d6bf3;
+  }
+
+  &:focus {
+    outline: 2px solid rgba(29, 107, 243, 0.3);
+  }
+`;
+
+const EyeIcon = ({ open }) =>
+  open ? (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ) : (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  );
+
 const Button = styled.button`
-  padding: 12px;
+  padding: 14px;
   background-color: #1d6bf3;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 
   &:hover:not(:disabled) {
     background-color: #155ab5;
   }
 
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
   &:disabled {
-    background-color: #999999;
+    background-color: #c0cfe8;
     cursor: not-allowed;
   }
 `;
 
 const SubButton = styled.button`
-  padding: 12px;
+  padding: 14px;
   background-color: #ffffff;
-  color: #1a1a1a;
-  border: 1px solid #e1e1e1;
-  border-radius: 6px;
+  color: #555555;
+  border: 1.5px solid #e1e1e1;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s;
 
   &:hover {
     background-color: #f5f5f5;
     border-color: #1d6bf3;
     color: #1d6bf3;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -106,88 +204,95 @@ const ButtonGroup = styled.div`
 `;
 
 const ErrorText = styled.p`
-  color: #e53e3e;
+  color: #dc2626;
   font-size: 13px;
   text-align: center;
   margin: 0;
-  padding: 8px;
-  background-color: #ffe5e5;
-  border-radius: 4px;
+  padding: 10px 12px;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
 `;
 
 const SuccessText = styled.p`
-  color: #22c55e;
+  color: #16a34a;
   font-size: 13px;
   text-align: center;
   margin: 0;
-  padding: 8px;
-  background-color: #e8f5e9;
-  border-radius: 4px;
+  padding: 10px 12px;
+  background-color: #f0fdf4;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
 `;
 
 const CheckboxWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding: 16px;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1.5px solid #eeeeee;
 `;
 
 const CheckboxLabel = styled.label`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   font-size: 14px;
   user-select: none;
+  color: #333;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #1d6bf3;
+  }
 
   input[type="checkbox"] {
     width: 18px;
     height: 18px;
     cursor: pointer;
     accent-color: #1d6bf3;
+    flex-shrink: 0;
   }
 
   &.all {
     font-weight: 600;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e1e1e1;
-    margin-bottom: 4px;
-  }
-
-  &.required {
     color: #1a1a1a;
-
-    &::after {
-      content: "[필수]";
-      color: #e53e3e;
-      font-weight: 600;
-      margin-left: auto;
-    }
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
   }
 
-  &.optional {
-    color: #666666;
+  .badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
 
-    &::after {
-      content: "[선택]";
-      color: #999999;
-      margin-left: auto;
-      font-size: 12px;
-    }
+  &.required .badge {
+    background-color: #fee2e2;
+    color: #dc2626;
+  }
+
+  &.optional .badge {
+    background-color: #f3f4f6;
+    color: #9ca3af;
   }
 `;
 
 // ===== 비밀번호 강도 =====
 const StrengthBarWrap = styled.div`
-  margin-top: 8px;
+  margin-top: 10px;
 `;
 
 const StrengthBar = styled.div`
-  height: 6px;
-  border-radius: 4px;
-  background-color: #e1e1e1;
+  height: 5px;
+  border-radius: 99px;
+  background-color: #eeeeee;
   overflow: hidden;
 `;
 
@@ -195,20 +300,37 @@ const StrengthFill = styled.div`
   height: 100%;
   width: ${(props) => props.width};
   background-color: ${(props) => props.color};
-  transition: 0.3s;
+  border-radius: 99px;
+  transition:
+    width 0.4s ease,
+    background-color 0.4s ease;
 `;
 
-const StrengthText = styled.p`
-  font-size: 12px;
+const StrengthRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 6px;
+`;
+
+const StrengthText = styled.span`
+  font-size: 12px;
   color: ${(props) => props.color};
-  font-weight: 500;
+  font-weight: 600;
+`;
+
+const StrengthHint = styled.span`
+  font-size: 11px;
+  color: #aaaaaa;
 `;
 
 const ValidationText = styled.p`
   font-size: 12px;
-  margin: 4px 0 0 0;
-  color: ${(props) => (props.valid ? "#22c55e" : "#e53e3e")};
+  margin: 6px 0 0 2px;
+  color: ${(props) => (props.valid ? "#16a34a" : "#dc2626")};
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `;
 
 const Title = styled.h2`
@@ -216,33 +338,86 @@ const Title = styled.h2`
   font-size: 20px;
   color: #1a1a1a;
   margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 `;
 
 const Subtitle = styled.p`
   text-align: center;
   font-size: 13px;
-  color: #666666;
+  color: #888888;
   margin: 0;
+`;
+
+const FieldBlock = styled.div`
+  width: 100%;
+`;
+
+//   선택 입력 필드 안내 레이블
+const FieldLabel = styled.p`
+  font-size: 12px;
+  color: #888888;
+  margin: 0 0 6px 2px;
+
+  span {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-left: 4px;
+  }
 `;
 
 // ===== 정규식 =====
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
+// ===== 비밀번호 강도 =====
+const getPasswordStrength = (pw) => {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Za-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  if (score <= 1)
+    return {
+      text: "약함",
+      color: "#dc2626",
+      width: "25%",
+      hint: "문자+숫자+특수문자를 조합하세요",
+    };
+  if (score <= 2)
+    return {
+      text: "보통",
+      color: "#f59e0b",
+      width: "55%",
+      hint: "더 강한 비밀번호를 권장해요",
+    };
+  if (score === 3)
+    return { text: "강함", color: "#16a34a", width: "80%", hint: "좋아요!" };
+  return {
+    text: "매우 강함",
+    color: "#0ea5e9",
+    width: "100%",
+    hint: "완벽해요!",
+  };
+};
+
 const SignUp = ({ switchToLogin }) => {
   const [step, setStep] = useState(1);
 
   const [email, setEmail] = useState("");
   const [nick, setNick] = useState("");
+  const [companyName, setCompanyName] = useState(""); //   회사명 추가
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
+
+  const [showPw, setShowPw] = useState(false);
+  const [showPw2, setShowPw2] = useState(false);
 
   const [error, setError] = useState("");
   const [emailMsg, setEmailMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
-
-  // ✅ null / true / false
   const [emailValid, setEmailValid] = useState(null);
 
   const [agree, setAgree] = useState({
@@ -253,25 +428,6 @@ const SignUp = ({ switchToLogin }) => {
     marketing: false,
   });
 
-  // ===== 비밀번호 강도 계산 =====
-  const getPasswordStrength = (pw) => {
-    let score = 0;
-
-    if (pw.length >= 8) score++;
-    if (/[A-Za-z]/.test(pw)) score++;
-    if (/\d/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-
-    if (score <= 1) {
-      return { text: "약함", color: "#E53E3E", width: "33%" };
-    } else if (score <= 3) {
-      return { text: "보통", color: "#F59E0B", width: "66%" };
-    } else {
-      return { text: "강함", color: "#22C55E", width: "100%" };
-    }
-  };
-
-  // 비밀번호 강도 (중복 호출 방지)
   const passwordStrength = getPasswordStrength(pw);
 
   // ===== 이메일 중복 체크 =====
@@ -285,11 +441,7 @@ const SignUp = ({ switchToLogin }) => {
     const checkEmail = async () => {
       try {
         setEmailLoading(true);
-        // ❌ 여기서 setEmailValid(null) 하면 타이밍이 늦음 → 제거
-
         const rsp = await AxiosApi.checkEmail(email);
-
-        // rsp.data = { success: true, message: '...', data: true/false }
         if (rsp.data.data === true) {
           setEmailMsg("✓ 사용 가능한 이메일입니다.");
           setEmailValid(true);
@@ -322,7 +474,6 @@ const SignUp = ({ switchToLogin }) => {
 
   const handleSingle = (name, checked) => {
     const newState = { ...agree, [name]: checked };
-    // 전체 동의는 모든 항목이 체크되었을 때만 true
     newState.all =
       newState.terms && newState.privacy && newState.age && newState.marketing;
     setAgree(newState);
@@ -343,15 +494,13 @@ const SignUp = ({ switchToLogin }) => {
   // ===== 회원가입 =====
   const handleSubmit = async () => {
     if (!nick || !pw || !pw2) {
-      setError("모든 값을 입력해주세요.");
+      setError("닉네임과 비밀번호를 입력해주세요.");
       return;
     }
-
     if (!passwordRegex.test(pw)) {
-      setError("비밀번호는 8자 이상, 문자+숫자 포함");
+      setError("비밀번호는 8자 이상, 문자+숫자 포함이어야 합니다.");
       return;
     }
-
     if (pw !== pw2) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
@@ -359,8 +508,8 @@ const SignUp = ({ switchToLogin }) => {
 
     try {
       setLoading(true);
-      const rsp = await AxiosApi.SignUp(email, pw, nick);
-
+      //   companyName 같이 전달 (백엔드 파라미터 순서 확인 필요)
+      const rsp = await AxiosApi.SignUp(email, pw, nick, companyName || null);
       if (rsp.data.success) {
         alert("회원가입 완료!");
         switchToLogin();
@@ -378,7 +527,7 @@ const SignUp = ({ switchToLogin }) => {
 
   return (
     <Container>
-      {/* STEP 1 */}
+      {/* STEP 1 — 약관 동의 */}
       {step === 1 && (
         <>
           <StepIndicator>
@@ -399,7 +548,6 @@ const SignUp = ({ switchToLogin }) => {
               />
               전체 동의
             </CheckboxLabel>
-
             <CheckboxLabel className="required">
               <input
                 type="checkbox"
@@ -407,8 +555,8 @@ const SignUp = ({ switchToLogin }) => {
                 onChange={(e) => handleSingle("terms", e.target.checked)}
               />
               서비스 이용약관 동의
+              <span className="badge">필수</span>
             </CheckboxLabel>
-
             <CheckboxLabel className="required">
               <input
                 type="checkbox"
@@ -416,8 +564,8 @@ const SignUp = ({ switchToLogin }) => {
                 onChange={(e) => handleSingle("privacy", e.target.checked)}
               />
               개인정보 수집 및 이용 동의
+              <span className="badge">필수</span>
             </CheckboxLabel>
-
             <CheckboxLabel className="required">
               <input
                 type="checkbox"
@@ -425,8 +573,8 @@ const SignUp = ({ switchToLogin }) => {
                 onChange={(e) => handleSingle("age", e.target.checked)}
               />
               만 14세 이상입니다
+              <span className="badge">필수</span>
             </CheckboxLabel>
-
             <CheckboxLabel className="optional">
               <input
                 type="checkbox"
@@ -434,6 +582,7 @@ const SignUp = ({ switchToLogin }) => {
                 onChange={(e) => handleSingle("marketing", e.target.checked)}
               />
               마케팅 정보 수신 동의
+              <span className="badge">선택</span>
             </CheckboxLabel>
           </CheckboxWrapper>
 
@@ -445,7 +594,7 @@ const SignUp = ({ switchToLogin }) => {
         </>
       )}
 
-      {/* STEP 2 */}
+      {/* STEP 2 — 이메일 */}
       {step === 2 && (
         <>
           <StepIndicator>
@@ -454,26 +603,26 @@ const SignUp = ({ switchToLogin }) => {
             <div />
           </StepIndicator>
 
-          <Title>이메일 인증</Title>
+          <Title>이메일 입력</Title>
           <Subtitle>사용할 이메일을 입력해주세요</Subtitle>
 
-          <Input
+          <PlainInput
             placeholder="company@example.com"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setEmailValid(null); // 타이핑 즉시 초기화
+              setEmailValid(null);
               setEmailMsg("");
             }}
             disabled={emailLoading}
           />
+
           {emailMsg &&
             (emailValid ? (
               <SuccessText>{emailMsg}</SuccessText>
             ) : (
               <ErrorText>{emailMsg}</ErrorText>
             ))}
-
           {error && <ErrorText>{error}</ErrorText>}
 
           <ButtonGroup row>
@@ -482,13 +631,13 @@ const SignUp = ({ switchToLogin }) => {
               onClick={handleNext}
               disabled={emailValid !== true || emailLoading}
             >
-              다음
+              {emailLoading ? "확인 중..." : "다음"}
             </Button>
           </ButtonGroup>
         </>
       )}
 
-      {/* STEP 3 */}
+      {/* STEP 3 — 정보 입력 */}
       {step === 3 && (
         <>
           <StepIndicator>
@@ -500,23 +649,54 @@ const SignUp = ({ switchToLogin }) => {
           <Title>정보 입력</Title>
           <Subtitle>닉네임과 비밀번호를 설정해 주세요</Subtitle>
 
-          <div style={{ width: "100%" }}>
-            <Input
-              placeholder="닉네임"
+          {/* 닉네임 */}
+          <FieldBlock>
+            <FieldLabel>
+              닉네임 <span>필수</span>
+            </FieldLabel>
+            <PlainInput
+              placeholder="사용할 닉네임을 입력해주세요"
               value={nick}
               onChange={(e) => setNick(e.target.value)}
               disabled={loading}
             />
-          </div>
+          </FieldBlock>
 
-          <div style={{ width: "100%" }}>
-            <Input
-              type="password"
-              placeholder="비밀번호 (8자 이상, 문자+숫자 포함)"
-              value={pw}
-              onChange={(e) => setPw(e.target.value)}
+          {/*   회사명 / 소속 */}
+          <FieldBlock>
+            <FieldLabel>
+              회사명 / 소속 <span>선택 · 미입력 시 [무소속] 표시</span>
+            </FieldLabel>
+            <PlainInput
+              placeholder="예) 카카오, 네이버, 스타트업 등"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
               disabled={loading}
             />
+          </FieldBlock>
+
+          {/* 비밀번호 */}
+          <FieldBlock>
+            <FieldLabel>
+              비밀번호 <span>필수</span>
+            </FieldLabel>
+            <InputWrapper>
+              <Input
+                type={showPw ? "text" : "password"}
+                placeholder="8자 이상, 문자+숫자 포함"
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                disabled={loading}
+              />
+              <EyeButton
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPw ? "비밀번호 숨기기" : "비밀번호 보기"}
+              >
+                <EyeIcon open={showPw} />
+              </EyeButton>
+            </InputWrapper>
 
             {pw && (
               <StrengthBarWrap>
@@ -526,21 +706,38 @@ const SignUp = ({ switchToLogin }) => {
                     color={passwordStrength.color}
                   />
                 </StrengthBar>
-                <StrengthText color={passwordStrength.color}>
-                  {passwordStrength.text}
-                </StrengthText>
+                <StrengthRow>
+                  <StrengthText color={passwordStrength.color}>
+                    {passwordStrength.text}
+                  </StrengthText>
+                  <StrengthHint>{passwordStrength.hint}</StrengthHint>
+                </StrengthRow>
               </StrengthBarWrap>
             )}
-          </div>
+          </FieldBlock>
 
-          <div style={{ width: "100%" }}>
-            <Input
-              type="password"
-              placeholder="비밀번호 재입력"
-              value={pw2}
-              onChange={(e) => setPw2(e.target.value)}
-              disabled={loading}
-            />
+          {/* 비밀번호 확인 */}
+          <FieldBlock>
+            <FieldLabel>
+              비밀번호 확인 <span>필수</span>
+            </FieldLabel>
+            <InputWrapper>
+              <Input
+                type={showPw2 ? "text" : "password"}
+                placeholder="비밀번호를 다시 입력해주세요"
+                value={pw2}
+                onChange={(e) => setPw2(e.target.value)}
+                disabled={loading}
+              />
+              <EyeButton
+                type="button"
+                onClick={() => setShowPw2((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPw2 ? "비밀번호 숨기기" : "비밀번호 보기"}
+              >
+                <EyeIcon open={showPw2} />
+              </EyeButton>
+            </InputWrapper>
 
             {pw2 && (
               <ValidationText valid={pw === pw2}>
@@ -549,7 +746,7 @@ const SignUp = ({ switchToLogin }) => {
                   : "✗ 비밀번호가 다릅니다."}
               </ValidationText>
             )}
-          </div>
+          </FieldBlock>
 
           {error && <ErrorText>{error}</ErrorText>}
 
