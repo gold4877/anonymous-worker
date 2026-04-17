@@ -4,7 +4,7 @@ import Modal from "../../component/Modal";
 import Login from "./Login";
 import SignUp from "./SignUp";
 
-const AuthModal = ({ open, close, initialTab = "login" }) => {
+const AuthModal = ({ open, close, initialTab = "login", extraProps = {} }) => {
   const [tab, setTab] = useState(initialTab);
 
   // 모달 열릴 때마다 initialTab 으로 리셋
@@ -28,6 +28,8 @@ const AuthModal = ({ open, close, initialTab = "login" }) => {
         <SignUp
           switchToLogin={() => setTab("login")}
           onClose={close} // ← Step 4 완료/스킵 시 모달 닫기용
+          startStep={extraProps.startStep}
+          passedUserId={extraProps.userId}
         />
       )}
     </Modal>

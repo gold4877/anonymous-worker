@@ -429,11 +429,11 @@ const getPasswordStrength = (pw) => {
 };
 
 // ===== 컴포넌트 =====
-const SignUp = ({ switchToLogin, onClose }) => {
+const SignUp = ({ switchToLogin, onClose, startStep, passedUserId }) => {
   const navigate = useNavigate();
-  const { handleLogin } = useContext(UserContext);
+  const { user, handleLogin } = useContext(UserContext);
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(startStep || 1);
 
   // Step 1~3 상태
   const [email, setEmail] = useState("");
@@ -456,7 +456,7 @@ const SignUp = ({ switchToLogin, onClose }) => {
   });
 
   // Step 4 상태 (회사 인증)
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(passedUserId || user?.userId || null);
   const [realName, setRealName] = useState("");
   const [age, setAge] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -466,6 +466,9 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
   // ===== 이메일 중복 체크 =====
   useEffect(() => {
+    if (passedUserId) setUserId(passedUserId);
+    else if (user?.userId) setUserId(user.userId);
+
     if (!emailRegex.test(email)) {
       setEmailMsg("");
       setEmailValid(null);
@@ -493,7 +496,7 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
     const timer = setTimeout(checkEmail, 500);
     return () => clearTimeout(timer);
-  }, [email]);
+  }, [email, passedUserId, user]);
 
   // ===== 약관 동의 =====
   const handleAll = (checked) => {
@@ -583,6 +586,10 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
   // ===== Step 4 인증 신청 =====
   const handleApplyCertification = async () => {
+    if (!userId) {
+      setError("사용자 정보가 없습니다. 다시 로그인해주세요.");
+      return;
+    }
     if (!realName || !age || !companyName) {
       setError("실명, 나이, 회사명을 모두 입력해주세요.");
       return;

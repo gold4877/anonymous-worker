@@ -22,12 +22,17 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState("login");
   const [searchValue, setSearchValue] = useState(""); // ← 검색 상태 App으로 통합
+  const [authExtraProps, setAuthExtraProps] = useState({});
 
-  const openAuth = (tab = "login") => {
+  const openAuth = (tab = "login", data = {}) => {
     setAuthTab(tab);
+    setAuthExtraProps(data);
     setIsAuthOpen(true);
   };
-  const closeAuth = () => setIsAuthOpen(false);
+  const closeAuth = () => {
+    setIsAuthOpen(false);
+    setAuthExtraProps({});
+  };
 
   return (
     <>
@@ -83,7 +88,12 @@ function App() {
             </Route>
           </Routes>
 
-          <AuthModal open={isAuthOpen} close={closeAuth} initialTab={authTab} />
+          <AuthModal
+            open={isAuthOpen}
+            close={closeAuth}
+            initialTab={authTab}
+            extraProps={authExtraProps}
+          />
         </Router>
       </UserStore>
     </>

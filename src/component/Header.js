@@ -6,7 +6,14 @@ import { ReactComponent as LogoSvg } from "../assets/team404-logo.svg";
 
 const Header = ({ openAuth, searchValue = "", onSearch }) => {
   const navigate = useNavigate();
-  const { loginUser, handleLogout } = useContext(UserContext);
+  const { loginUser, handleLogout, refreshUserInfo } = useContext(UserContext);
+
+  const handleLogoClick = async () => {
+    if (loginUser) {
+      await refreshUserInfo();
+    }
+    navigate(loginUser ? "/home" : "/");
+  };
 
   const onClickLogout = () => {
     handleLogout();
@@ -15,11 +22,13 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
 
   // 글쓰기 가능 여부: 로그인 + 인증 승인 상태
   const canWrite = loginUser && loginUser.certStatus === "APPROVED";
+  // 미인증 유저 인증신청 버튼
+  const approved = loginUser && loginUser.certStatus === "NONE";
 
   return (
     <HeaderWrap>
       {/* ✨ [변경] SVG 컴포넌트를 직접 렌더링합니다. */}
-      <Logo onClick={() => navigate(loginUser ? "/home" : "/")}>
+      <Logo onClick={handleLogoClick}>
         {/* LogoSvg는 일반 React 컴포넌트이므로 직접 사용 가능 */}
         <LogoSvg />
       </Logo>
@@ -43,6 +52,19 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
             {/* 인증 승인된 유저만 글쓰기 가능 */}
             {canWrite && (
               <OutlineBtn onClick={() => navigate("/write")}>글쓰기</OutlineBtn>
+            )}
+            {approved && (
+              <OutlineBtn
+                onClick={() =>
+                  openAuth &&
+                  openAuth("signup", {
+                    startStep: 4,
+                    userId: loginUser?.userId,
+                  })
+                }
+              >
+                인증신청
+              </OutlineBtn>
             )}
             <OutlineBtn onClick={onClickLogout}>로그아웃</OutlineBtn>
           </>
