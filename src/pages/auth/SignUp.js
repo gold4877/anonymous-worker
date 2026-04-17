@@ -559,15 +559,21 @@ const SignUp = ({ switchToLogin, onClose }) => {
         return;
       }
 
-      const acquiredUserId = loginRsp.data.userId ?? loginRsp.data.data?.userId;
+      const userData = loginRsp.data.data;
+      const acquiredUserId = loginRsp.data.userId ?? userData?.userId;
       setUserId(acquiredUserId);
 
       if (typeof handleLogin === "function") {
-        await handleLogin(loginRsp.data.data);
+        await handleLogin(userData);
       }
 
-      // 3) Step 4로 이동
-      setStep(4);
+      // 3) 관리자는 Step 4 스킵 → 바로 /home 이동
+      if (userData?.isAdmin) {
+        onClose && onClose();
+        navigate("/home");
+      } else {
+        setStep(4);
+      }
     } catch (e) {
       setError(e.response?.data?.message || "처리 중 오류가 발생했습니다.");
     } finally {
@@ -866,7 +872,8 @@ const SignUp = ({ switchToLogin, onClose }) => {
 
           <InfoBox>
             <strong>🎉 가입을 축하해요!</strong>
-            회사 인증은 선택 사항이에요.
+            회사 인증은 선택 사항이에요. 나중에 마이페이지에서도 신청할 수
+            있어요.
           </InfoBox>
 
           {/* 실명 */}
