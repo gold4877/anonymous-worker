@@ -23,7 +23,8 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
   // 글쓰기 가능 여부: 로그인 + 인증 승인 상태
   const canWrite = loginUser && loginUser.certStatus === "APPROVED";
   // 미인증 유저 인증신청 버튼
-  const approved = loginUser && loginUser.certStatus === "NONE";
+  const approved =
+    loginUser && loginUser.certStatus === "NONE" && !loginUser.isAdmin;
 
   return (
     <HeaderWrap>
