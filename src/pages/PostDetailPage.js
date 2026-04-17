@@ -9,6 +9,7 @@ import {
 } from "react-icons/ai";
 import { FiEye } from "react-icons/fi";
 import { IoArrowBack } from "react-icons/io5";
+import { MdEdit, MdDelete, MdCheck, MdClose } from "react-icons/md";
 import AxiosApi from "../api/AxiosApi";
 import { UserContext } from "../context/UserStore";
 
@@ -18,7 +19,9 @@ const COLORS = {
   white: "#FFFFFF",
   bg: "#F5F5F5",
   border: "#E1E1E1",
+  inputBg: "#EEEEEE",
   gray: "#999999",
+  danger: "#E53E3E",
 };
 
 const categoryMap = {
@@ -54,6 +57,19 @@ const PostDetailPage = () => {
   const [commentInput, setCommentInput] = useState("");
   const [comments, setComments] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // ─── 게시글 수정 state ───
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [postEdited, setPostEdited] = useState(false);
+
+  // ─── 댓글 수정 state ───
+  // editingCommentId: 현재 수정 중인 댓글 ID (null이면 수정 중 아님)
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
+  const [commentSaving, setCommentSaving] = useState(false);
 
   // 게시글 조회
   useEffect(() => {
@@ -101,7 +117,10 @@ const PostDetailPage = () => {
 
   if (!post) return <LoadingPage>게시글을 불러오는 중입니다...</LoadingPage>;
 
-  // 좋아요 토글
+  // 작성자 본인 여부
+  const isAuthor = loginUser && loginUser.userId === post.userId;
+
+  // ─── 좋아요 토글 ───
   const onClickLike = async () => {
     if (!loginUser) {
       alert("로그인이 필요합니다.");
@@ -118,7 +137,66 @@ const PostDetailPage = () => {
     }
   };
 
-  // 댓글 등록
+  // ─── 게시글 수정 ───
+  const onClickEdit = () => {
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setIsEditing(true);
+  };
+
+  const onClickEditCancel = () => {
+    setIsEditing(false);
+    setEditTitle("");
+    setEditContent("");
+  };
+
+  const onClickEditSave = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
+    setEditSaving(true);
+    try {
+      const rsp = await AxiosApi.updatePost(
+        postId,
+        loginUser.userId,
+        editTitle.trim(),
+        editContent.trim(),
+        post.category,
+      );
+      if (rsp.data.success) {
+        setPost((prev) => ({
+          ...prev,
+          title: editTitle.trim(),
+          content: editContent.trim(),
+        }));
+        setPostEdited(true);
+        setIsEditing(false);
+      }
+    } catch (e) {
+      console.error("게시글 수정 실패:", e);
+      alert("수정에 실패했습니다.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  // ─── 게시글 삭제 ───
+  const onClickDelete = async () => {
+    if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
+    try {
+      const rsp = await AxiosApi.deletePost(postId, loginUser.userId);
+      if (rsp.data.success) {
+        alert("게시글이 삭제되었습니다.");
+        navigate(-1);
+      }
+    } catch (e) {
+      console.error("게시글 삭제 실패:", e);
+      alert("삭제에 실패했습니다.");
+    }
+  };
+
+  // ─── 댓글 등록 ───
   const onClickCommentSubmit = async () => {
     if (!loginUser) {
       alert("로그인이 필요합니다.");
@@ -151,6 +229,63 @@ const PostDetailPage = () => {
     }
   };
 
+  // ─── 댓글 수정 진입 ───
+  const onClickCommentEdit = (comment) => {
+    setEditingCommentId(comment.commentId);
+    setEditCommentContent(comment.content);
+  };
+
+  // ─── 댓글 수정 취소 ───
+  const onClickCommentEditCancel = () => {
+    setEditingCommentId(null);
+    setEditCommentContent("");
+  };
+
+  // ─── 댓글 수정 저장 ───
+  const onClickCommentEditSave = async (commentId) => {
+    if (!editCommentContent.trim()) {
+      alert("댓글 내용을 입력해주세요.");
+      return;
+    }
+    setCommentSaving(true);
+    try {
+      const rsp = await AxiosApi.updateComment(
+        postId,
+        commentId,
+        loginUser.userId,
+        editCommentContent.trim(),
+      );
+      if (rsp.data.success) {
+        await fetchComments();
+        setEditingCommentId(null);
+        setEditCommentContent("");
+      }
+    } catch (e) {
+      console.error("댓글 수정 실패:", e);
+      alert("댓글 수정에 실패했습니다.");
+    } finally {
+      setCommentSaving(false);
+    }
+  };
+
+  // ─── 댓글 삭제 ───
+  const onClickCommentDelete = async (commentId) => {
+    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    try {
+      const rsp = await AxiosApi.deleteComment(
+        postId,
+        commentId,
+        loginUser.userId,
+      );
+      if (rsp.data.success) {
+        await fetchComments();
+      }
+    } catch (e) {
+      console.error("댓글 삭제 실패:", e);
+      alert("댓글 삭제에 실패했습니다.");
+    }
+  };
+
   return (
     <Page>
       <Container>
@@ -163,7 +298,33 @@ const PostDetailPage = () => {
           <CategoryBadge>
             {categoryMap[post.category] || post.category}
           </CategoryBadge>
-          <Title>{post.title}</Title>
+
+          {/* ─── 제목 (수정 모드 / 일반 모드) ─── */}
+          {isEditing ? (
+            <EditTitleInput
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="제목을 입력하세요"
+              maxLength={100}
+            />
+          ) : (
+            <TitleRow>
+              <Title>{post.title}</Title>
+              {isAuthor && (
+                <AuthorActions>
+                  <ActionBtn onClick={onClickEdit} title="수정">
+                    <MdEdit size={18} />
+                    수정
+                  </ActionBtn>
+                  <ActionBtn $danger onClick={onClickDelete} title="삭제">
+                    <MdDelete size={18} />
+                    삭제
+                  </ActionBtn>
+                </AuthorActions>
+              )}
+            </TitleRow>
+          )}
+
           <AuthorRow>
             {post.companyName || "무소속"} · {post.maskedEmail}
           </AuthorRow>
@@ -172,6 +333,7 @@ const PostDetailPage = () => {
             <InfoItem>
               <AiOutlineClockCircle size={14} />
               <span>{formatRelativeDate(post.createdAt)}</span>
+              {postEdited && <EditedBadge>수정됨</EditedBadge>}
             </InfoItem>
             <InfoItem>
               <FiEye size={14} />
@@ -184,7 +346,32 @@ const PostDetailPage = () => {
           </InfoRow>
 
           <Divider />
-          <Content>{post.content}</Content>
+
+          {/* ─── 본문 (수정 모드 / 일반 모드) ─── */}
+          {isEditing ? (
+            <>
+              <EditContentTextarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                placeholder="내용을 입력하세요"
+              />
+              <EditActionRow>
+                <EditCancelBtn
+                  onClick={onClickEditCancel}
+                  disabled={editSaving}
+                >
+                  <MdClose size={16} />
+                  취소
+                </EditCancelBtn>
+                <EditSaveBtn onClick={onClickEditSave} disabled={editSaving}>
+                  <MdCheck size={16} />
+                  {editSaving ? "저장 중..." : "저장"}
+                </EditSaveBtn>
+              </EditActionRow>
+            </>
+          ) : (
+            <Content>{post.content}</Content>
+          )}
 
           <BottomRow>
             <LikeBox onClick={onClickLike}>
@@ -198,6 +385,7 @@ const PostDetailPage = () => {
           </BottomRow>
         </PostSection>
 
+        {/* ─── 댓글 섹션 ─── */}
         <CommentSection>
           <CommentTitle>댓글 {comments.length}</CommentTitle>
 
@@ -229,26 +417,88 @@ const PostDetailPage = () => {
           </CommentInputContainer>
 
           <CommentList>
-            {comments.map((comment) => (
-              <CommentItem key={comment.commentId}>
-                <CommentAuthor>
-                  {/* 회사명 있으면 파랑, 없으면 무소속 */}
-                  <CompanyName>{comment.companyName || "무소속"}</CompanyName>
-                  {/* maskedEmail 있으면 표시, 없으면 userName */}
-                  <MaskedId>
-                    {" "}
-                    · {comment.maskedEmail || comment.userName}
-                  </MaskedId>
-                </CommentAuthor>
-                <CommentText>{comment.content}</CommentText>
-                <CommentMetaRow>
-                  <CommentMeta>
-                    <AiOutlineClockCircle size={13} />
-                    <span>{formatRelativeDate(comment.createdAt)}</span>
-                  </CommentMeta>
-                </CommentMetaRow>
-              </CommentItem>
-            ))}
+            {comments.map((comment) => {
+              const isCommentAuthor =
+                loginUser && loginUser.userId === comment.userId;
+              const isEditingThis = editingCommentId === comment.commentId;
+
+              return (
+                <CommentItem key={comment.commentId}>
+                  <CommentHeader>
+                    <CommentAuthor>
+                      <CompanyName>
+                        {comment.companyName || "무소속"}
+                      </CompanyName>
+                      <MaskedId>
+                        {" "}
+                        · {comment.maskedEmail || comment.userName}
+                      </MaskedId>
+                    </CommentAuthor>
+
+                    {/* 댓글 작성자 본인에게만 수정/삭제 버튼 노출 */}
+                    {isCommentAuthor && !isEditingThis && (
+                      <CommentActions>
+                        <CommentActionBtn
+                          onClick={() => onClickCommentEdit(comment)}
+                          title="수정"
+                        >
+                          <MdEdit size={14} />
+                          수정
+                        </CommentActionBtn>
+                        <CommentActionBtn
+                          $danger
+                          onClick={() =>
+                            onClickCommentDelete(comment.commentId)
+                          }
+                          title="삭제"
+                        >
+                          <MdDelete size={14} />
+                          삭제
+                        </CommentActionBtn>
+                      </CommentActions>
+                    )}
+                  </CommentHeader>
+
+                  {/* 댓글 수정 모드 */}
+                  {isEditingThis ? (
+                    <CommentEditBox>
+                      <CommentEditTextarea
+                        value={editCommentContent}
+                        onChange={(e) => setEditCommentContent(e.target.value)}
+                        disabled={commentSaving}
+                      />
+                      <CommentEditActions>
+                        <EditCancelBtn
+                          onClick={onClickCommentEditCancel}
+                          disabled={commentSaving}
+                        >
+                          <MdClose size={14} />
+                          취소
+                        </EditCancelBtn>
+                        <EditSaveBtn
+                          onClick={() =>
+                            onClickCommentEditSave(comment.commentId)
+                          }
+                          disabled={commentSaving}
+                        >
+                          <MdCheck size={14} />
+                          {commentSaving ? "저장 중..." : "저장"}
+                        </EditSaveBtn>
+                      </CommentEditActions>
+                    </CommentEditBox>
+                  ) : (
+                    <CommentText>{comment.content}</CommentText>
+                  )}
+
+                  <CommentMetaRow>
+                    <CommentMeta>
+                      <AiOutlineClockCircle size={13} />
+                      <span>{formatRelativeDate(comment.createdAt)}</span>
+                    </CommentMeta>
+                  </CommentMetaRow>
+                </CommentItem>
+              );
+            })}
           </CommentList>
         </CommentSection>
       </Container>
@@ -287,7 +537,7 @@ const BackButton = styled.button`
   margin: 30px 0;
   border: none;
   background: transparent;
-  color: #999999;
+  color: ${COLORS.gray};
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -300,16 +550,127 @@ const CategoryBadge = styled.div`
   padding: 4px 12px;
   border-radius: 999px;
   background: rgba(29, 107, 243, 0.1);
-  color: #1d6bf3;
+  color: ${COLORS.primary};
   font-size: 12px;
   font-weight: 600;
+`;
+const TitleRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 18px;
 `;
 const Title = styled.h1`
   font-size: 23px;
   font-weight: 800;
   line-height: 1.25;
   color: ${COLORS.text};
+  flex: 1;
+  margin: 0;
+`;
+const AuthorActions = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 4px;
+`;
+const ActionBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid ${(p) => (p.$danger ? COLORS.danger : COLORS.border)};
+  background: ${COLORS.white};
+  color: ${(p) => (p.$danger ? COLORS.danger : COLORS.gray)};
+  transition:
+    background 0.15s,
+    color 0.15s;
+  &:hover {
+    background: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
+    color: ${COLORS.white};
+    border-color: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
+  }
+`;
+
+/* 수정 모드 입력 */
+const EditTitleInput = styled.input`
+  width: 100%;
+  font-size: 20px;
+  font-weight: 700;
+  color: ${COLORS.text};
+  border: 1px solid ${COLORS.primary};
+  border-radius: 6px;
+  padding: 10px 14px;
   margin: 10px 0 18px;
+  outline: none;
+  background: ${COLORS.white};
+  box-sizing: border-box;
+`;
+const EditContentTextarea = styled.textarea`
+  width: 100%;
+  min-height: 260px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: ${COLORS.text};
+  border: 1px solid ${COLORS.primary};
+  border-radius: 6px;
+  padding: 14px;
+  outline: none;
+  resize: vertical;
+  background: ${COLORS.white};
+  box-sizing: border-box;
+  margin-bottom: 14px;
+`;
+const EditActionRow = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 60px;
+`;
+const EditCancelBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid ${COLORS.border};
+  background: ${COLORS.white};
+  color: ${COLORS.gray};
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover:not(:disabled) {
+    background: ${COLORS.bg};
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+const EditSaveBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  background: ${COLORS.primary};
+  color: ${COLORS.white};
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  &:hover:not(:disabled) {
+    background: #1558d0;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 const AuthorRow = styled.div`
   font-size: 15px;
@@ -363,6 +724,8 @@ const LikeCount = styled.span`
   font-weight: 500;
   color: ${COLORS.text};
 `;
+
+/* ─── 댓글 섹션 ─── */
 const CommentSection = styled.div`
   border-top: 1px solid ${COLORS.border};
   padding-top: 18px;
@@ -406,7 +769,7 @@ const CommentInput = styled.input`
   color: ${COLORS.text};
   background: transparent;
   &::placeholder {
-    color: #999999;
+    color: ${COLORS.gray};
   }
   &:disabled {
     cursor: not-allowed;
@@ -433,11 +796,75 @@ const CommentItem = styled.div`
   padding: 18px;
   border-bottom: 1px solid ${COLORS.border};
 `;
-const CommentAuthor = styled.div`
+
+/* 댓글 헤더: 작성자 + 수정/삭제 버튼 */
+const CommentHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
 `;
+const CommentAuthor = styled.div`
+  display: flex;
+  align-items: center;
+`;
+const CommentActions = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+const CommentActionBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid ${(p) => (p.$danger ? COLORS.danger : COLORS.border)};
+  background: ${COLORS.white};
+  color: ${(p) => (p.$danger ? COLORS.danger : COLORS.gray)};
+  transition:
+    background 0.15s,
+    color 0.15s;
+  &:hover {
+    background: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
+    color: ${COLORS.white};
+    border-color: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
+  }
+`;
+
+/* 댓글 수정 박스 */
+const CommentEditBox = styled.div`
+  margin-bottom: 8px;
+`;
+const CommentEditTextarea = styled.textarea`
+  width: 100%;
+  min-height: 80px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: ${COLORS.text};
+  border: 1px solid ${COLORS.primary};
+  border-radius: 6px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  background: ${COLORS.white};
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+const CommentEditActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+`;
+
 const CompanyName = styled.span`
-  color: #1d6bf3;
+  color: ${COLORS.primary};
   font-weight: 500;
   font-size: 14px;
 `;
@@ -462,4 +889,12 @@ const CommentMeta = styled.div`
   display: flex;
   align-items: center;
   gap: 5px;
+`;
+const EditedBadge = styled.span`
+  font-size: 11px;
+  color: ${COLORS.gray};
+  background: ${COLORS.border};
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 4px;
 `;
