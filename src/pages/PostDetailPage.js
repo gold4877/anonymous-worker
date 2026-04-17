@@ -66,7 +66,6 @@ const PostDetailPage = () => {
   const [postEdited, setPostEdited] = useState(false);
 
   // ─── 댓글 수정 state ───
-  // editingCommentId: 현재 수정 중인 댓글 ID (null이면 수정 중 아님)
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentContent, setEditCommentContent] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
@@ -117,8 +116,10 @@ const PostDetailPage = () => {
 
   if (!post) return <LoadingPage>게시글을 불러오는 중입니다...</LoadingPage>;
 
-  // 작성자 본인 여부
+  // 작성자 본인 또는 관리자 여부 (수정은 본인만, 삭제는 본인+관리자)
   const isAuthor = loginUser && loginUser.userId === post.userId;
+  const canDelete =
+    loginUser && (loginUser.userId === post.userId || loginUser.isAdmin);
 
   // ─── 좋아요 토글 ───
   const onClickLike = async () => {
@@ -229,19 +230,17 @@ const PostDetailPage = () => {
     }
   };
 
-  // ─── 댓글 수정 진입 ───
+  // ─── 댓글 수정 ───
   const onClickCommentEdit = (comment) => {
     setEditingCommentId(comment.commentId);
     setEditCommentContent(comment.content);
   };
 
-  // ─── 댓글 수정 취소 ───
   const onClickCommentEditCancel = () => {
     setEditingCommentId(null);
     setEditCommentContent("");
   };
 
-  // ─── 댓글 수정 저장 ───
   const onClickCommentEditSave = async (commentId) => {
     if (!editCommentContent.trim()) {
       alert("댓글 내용을 입력해주세요.");
@@ -277,9 +276,7 @@ const PostDetailPage = () => {
         commentId,
         loginUser.userId,
       );
-      if (rsp.data.success) {
-        await fetchComments();
-      }
+      if (rsp.data.success) await fetchComments();
     } catch (e) {
       console.error("댓글 삭제 실패:", e);
       alert("댓글 삭제에 실패했습니다.");
@@ -299,7 +296,7 @@ const PostDetailPage = () => {
             {categoryMap[post.category] || post.category}
           </CategoryBadge>
 
-          {/* ─── 제목 (수정 모드 / 일반 모드) ─── */}
+          {/* 제목 (수정 모드 / 일반 모드) */}
           {isEditing ? (
             <EditTitleInput
               value={editTitle}
@@ -310,16 +307,21 @@ const PostDetailPage = () => {
           ) : (
             <TitleRow>
               <Title>{post.title}</Title>
-              {isAuthor && (
+              {/* 수정: 본인만 / 삭제: 본인 + 관리자 */}
+              {(isAuthor || canDelete) && (
                 <AuthorActions>
-                  <ActionBtn onClick={onClickEdit} title="수정">
-                    <MdEdit size={18} />
-                    수정
-                  </ActionBtn>
-                  <ActionBtn $danger onClick={onClickDelete} title="삭제">
-                    <MdDelete size={18} />
-                    삭제
-                  </ActionBtn>
+                  {isAuthor && (
+                    <ActionBtn onClick={onClickEdit} title="수정">
+                      <MdEdit size={18} />
+                      수정
+                    </ActionBtn>
+                  )}
+                  {canDelete && (
+                    <ActionBtn $danger onClick={onClickDelete} title="삭제">
+                      <MdDelete size={18} />
+                      삭제
+                    </ActionBtn>
+                  )}
                 </AuthorActions>
               )}
             </TitleRow>
@@ -347,7 +349,7 @@ const PostDetailPage = () => {
 
           <Divider />
 
-          {/* ─── 본문 (수정 모드 / 일반 모드) ─── */}
+          {/* 본문 (수정 모드 / 일반 모드) */}
           {isEditing ? (
             <>
               <EditContentTextarea
@@ -385,7 +387,7 @@ const PostDetailPage = () => {
           </BottomRow>
         </PostSection>
 
-        {/* ─── 댓글 섹션 ─── */}
+        {/* 댓글 섹션 */}
         <CommentSection>
           <CommentTitle>댓글 {comments.length}</CommentTitle>
 
@@ -435,7 +437,6 @@ const PostDetailPage = () => {
                       </MaskedId>
                     </CommentAuthor>
 
-                    {/* 댓글 작성자 본인에게만 수정/삭제 버튼 노출 */}
                     {isCommentAuthor && !isEditingThis && (
                       <CommentActions>
                         <CommentActionBtn
@@ -459,7 +460,6 @@ const PostDetailPage = () => {
                     )}
                   </CommentHeader>
 
-                  {/* 댓글 수정 모드 */}
                   {isEditingThis ? (
                     <CommentEditBox>
                       <CommentEditTextarea
@@ -596,8 +596,6 @@ const ActionBtn = styled.button`
     border-color: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
   }
 `;
-
-/* 수정 모드 입력 */
 const EditTitleInput = styled.input`
   width: 100%;
   font-size: 20px;
@@ -724,8 +722,6 @@ const LikeCount = styled.span`
   font-weight: 500;
   color: ${COLORS.text};
 `;
-
-/* ─── 댓글 섹션 ─── */
 const CommentSection = styled.div`
   border-top: 1px solid ${COLORS.border};
   padding-top: 18px;
@@ -796,8 +792,6 @@ const CommentItem = styled.div`
   padding: 18px;
   border-bottom: 1px solid ${COLORS.border};
 `;
-
-/* 댓글 헤더: 작성자 + 수정/삭제 버튼 */
 const CommentHeader = styled.div`
   display: flex;
   align-items: center;
@@ -833,8 +827,6 @@ const CommentActionBtn = styled.button`
     border-color: ${(p) => (p.$danger ? COLORS.danger : COLORS.primary)};
   }
 `;
-
-/* 댓글 수정 박스 */
 const CommentEditBox = styled.div`
   margin-bottom: 8px;
 `;
@@ -862,7 +854,6 @@ const CommentEditActions = styled.div`
   justify-content: flex-end;
   gap: 6px;
 `;
-
 const CompanyName = styled.span`
   color: ${COLORS.primary};
   font-weight: 500;

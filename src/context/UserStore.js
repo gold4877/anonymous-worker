@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import AxiosApi from "../api/AxiosApi";
 export const UserContext = createContext(null);
 
 /**
@@ -26,6 +27,31 @@ const UserStore = (props) => {
     }
     return parsed;
   });
+
+  // 임시 추가
+  const refreshUserInfo = async () => {
+    if (!loginUser || !loginUser.userId) return;
+
+    try {
+      const rsp = await AxiosApi.getUser(loginUser.userId);
+      if (rsp.data.success) {
+        const updatedUser = rsp.data.data;
+        // 구버전 호환: "admin" 필드 → "isAdmin" 으로 자동 변환
+        if (
+          updatedUser.admin !== undefined &&
+          updatedUser.isAdmin === undefined
+        ) {
+          updatedUser.isAdmin = updatedUser.admin;
+        }
+
+        setLoginUser(updatedUser);
+
+        localStorage.setItem("loginUser", JSON.stringify(updatedUser));
+      }
+    } catch (e) {
+      console.error("유저 정보 동기화 실패: ", e);
+    }
+  };
 
   // 색상 변경 시 localStorage 동기화
   useEffect(() => {
@@ -56,6 +82,12 @@ const UserStore = (props) => {
     localStorage.removeItem("email"); // 기존 호환성 유지
   };
 
+  useEffect(() => {
+    if (loginUser) {
+      refreshUserInfo();
+    }
+  }, []);
+
   return (
     <UserContext.Provider
       value={{
@@ -65,6 +97,7 @@ const UserStore = (props) => {
         setLoginUser,
         handleLogin,
         handleLogout,
+        refreshUserInfo,
       }}
     >
       {props.children}
