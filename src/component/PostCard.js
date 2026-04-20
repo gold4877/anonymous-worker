@@ -48,7 +48,7 @@ function PostCard({ post }) {
       <CardHeader>
         <AuthorInfo>
           <CompanyBadge>{authorLabel}</CompanyBadge>
-          <Nickname>{post.nickname || post.userName}</Nickname>
+          <Nickname>{post.maskedEmail || post.userName}</Nickname>
         </AuthorInfo>
         <MoreButton title="더보기" onClick={(e) => e.stopPropagation()}>
           ⋮
