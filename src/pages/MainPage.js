@@ -13,7 +13,7 @@ const CATEGORY_MAP = {
   "정보 게시판": "INFO",
   "질문 게시판": "QNA",
 };
-const PREVIEW_COUNT = 3; // 메인 뷰에서 섹션당 보여줄 게시글 수
+const PREVIEW_COUNT = 3;
 
 function MainPage({ openAuth, searchValue = "" }) {
   const { loginUser } = useContext(UserContext);
@@ -22,15 +22,27 @@ function MainPage({ openAuth, searchValue = "" }) {
   const [allPosts, setAllPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState("인기 게시물");
-  // null = 전체 메인 뷰, 문자열 = 해당 카테고리 전체 뷰
   const [filterCategory, setFilterCategory] = useState(null);
 
+  // ✅ loginUser?.admin → loginUser?.isAdmin 수정
   const isAdmin = loginUser?.isAdmin;
 
-  // 페이지 로드 시 게시글 전체 조회
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchPosts();
+  }, []);
+
+  // 탭 전환 시 데이터 새로고침 (visibility API)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchPosts();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const fetchPosts = async () => {
@@ -49,6 +61,7 @@ function MainPage({ openAuth, searchValue = "" }) {
   const getPostsBySection = (section) => {
     let posts = [];
     if (section === "인기 게시물") {
+      // ✅ likeCount 정렬 유지 (becamePopularAt 사용 안 함)
       posts = [...allPosts]
         .sort((a, b) => b.likeCount - a.likeCount)
         .slice(0, 5);
@@ -63,7 +76,6 @@ function MainPage({ openAuth, searchValue = "" }) {
     return posts;
   };
 
-  // 섹션 ref (스크롤용 - 전체 뷰일 때)
   const sectionRefs = {
     "인기 게시물": useRef(null),
     "자유 게시판": useRef(null),
@@ -71,12 +83,9 @@ function MainPage({ openAuth, searchValue = "" }) {
     "질문 게시판": useRef(null),
   };
 
-  // 사이드바 클릭
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
-
     if (filterCategory) {
-      // 필터 뷰 → 전체 뷰 복귀 후 해당 섹션으로 스크롤
       setFilterCategory(null);
       setTimeout(() => {
         const el = sectionRefs[menu]?.current;
@@ -98,15 +107,12 @@ function MainPage({ openAuth, searchValue = "" }) {
     }
   };
 
-  // 더보기 클릭 → 해당 카테고리 전체 뷰
   const handleMoreClick = (section) => {
-    if (section === "인기 게시물") return; // 인기 게시물은 더보기 없음
     setFilterCategory(section);
     setActiveMenu(section);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 전체 뷰로 복귀
   const handleBackToMain = () => {
     setFilterCategory(null);
     setActiveMenu("인기 게시물");
@@ -140,22 +146,21 @@ function MainPage({ openAuth, searchValue = "" }) {
           isAdmin={isAdmin}
         />
 
-        <MainContent>
+        {/* key={filterCategory}: 카테고리 변경 시 애니메이션 트리거 */}
+        <MainContent key={filterCategory}>
           {loading ? (
             <LoadingText>게시글을 불러오는 중...</LoadingText>
           ) : filterCategory ? (
-            // ── 카테고리 전체 뷰 ──────────────────────────────
             <CategorySection>
               <CategoryHeader>
                 <CategoryTitle>{filterCategory}</CategoryTitle>
-                <BackButton onClick={handleBackToMain}>← 전체 보기</BackButton>
+                <BackButton onClick={handleBackToMain}>← 메인으로</BackButton>
               </CategoryHeader>
               <PostsContainer>
                 {renderPostList(getPostsBySection(filterCategory))}
               </PostsContainer>
             </CategorySection>
           ) : (
-            // ── 메인 뷰 (섹션별 미리보기) ─────────────────────
             SECTIONS.map((section) => {
               const posts = getPostsBySection(section);
               const preview = posts.slice(0, PREVIEW_COUNT);
@@ -164,12 +169,13 @@ function MainPage({ openAuth, searchValue = "" }) {
               return (
                 <CategorySection ref={sectionRefs[section]} key={section}>
                   <CategoryHeader>
-                    <CategoryTitle onClick={() => handleMenuClick(section)}>
+                    {/* 제목 클릭 → 더보기와 동일 동작 */}
+                    <CategoryTitle onClick={() => handleMoreClick(section)}>
                       {section}
                     </CategoryTitle>
-                    {section !== "인기 게시물" && (
+                    {hasMore && (
                       <LoadMoreButton onClick={() => handleMoreClick(section)}>
-                        더보기 {hasMore && `(+${posts.length - PREVIEW_COUNT})`}
+                        더보기
                       </LoadMoreButton>
                     )}
                   </CategoryHeader>
@@ -193,7 +199,6 @@ const PageWrapper = styled.div`
   display: flex;
   flex-direction: column;
 `;
-
 const LayoutWrapper = styled.div`
   flex: 1;
   max-width: 1200px;
@@ -204,29 +209,38 @@ const LayoutWrapper = styled.div`
   gap: 30px;
   align-items: flex-start;
 `;
-
+// 카테고리 전환 시 스케일 + 페이드 애니메이션
 const MainContent = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 30px;
   min-width: 0;
-`;
+  animation: scaleAndFadeIn 0.5s ease-out;
 
+  @keyframes scaleAndFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;
 const CategorySection = styled.div`
   background: #ffffff;
   border: 1px solid #e1e1e1;
   border-radius: 8px;
   padding: 24px;
 `;
-
 const CategoryHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 `;
-
 const CategoryTitle = styled.h2`
   font-size: 18px;
   font-weight: 700;
@@ -238,13 +252,11 @@ const CategoryTitle = styled.h2`
     color: #1d6bf3;
   }
 `;
-
 const PostsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
-
 const LoadMoreButton = styled.button`
   padding: 6px 12px;
   background: #ffffff;
@@ -261,7 +273,6 @@ const LoadMoreButton = styled.button`
     color: #1d6bf3;
   }
 `;
-
 const BackButton = styled.button`
   padding: 6px 12px;
   background: #f5f5f5;
@@ -276,14 +287,12 @@ const BackButton = styled.button`
     background: #e1e1e1;
   }
 `;
-
 const LoadingText = styled.p`
   text-align: center;
   padding: 60px 0;
   color: #999999;
   font-size: 14px;
 `;
-
 const EmptyText = styled.p`
   text-align: center;
   padding: 20px;

@@ -431,7 +431,7 @@ const getPasswordStrength = (pw) => {
 // ===== 컴포넌트 =====
 const SignUp = ({ switchToLogin, onClose, startStep, passedUserId }) => {
   const navigate = useNavigate();
-  const { user, handleLogin } = useContext(UserContext);
+  const { user, handleLogin, refreshUserInfo } = useContext(UserContext);
 
   const [step, setStep] = useState(startStep || 1);
 
@@ -609,6 +609,11 @@ const SignUp = ({ switchToLogin, onClose, startStep, passedUserId }) => {
         companyName,
       );
       alert("인증 신청이 완료됐습니다. 관리자 승인 후 이용 가능합니다");
+      await refreshUserInfo();
+      // step 4 에서 이미 인증을 신청했음에도 불구하고
+      // 동기화가 안 되어 메인 페이지에서 사용자 이름 옆에 인증 신청이 뜨던 것을 신청완료 후 한번더 동기화 하는 것으로 해결.
+      // 물론 새로고침 하면 없어지긴 했음.
+
       if (typeof onClose === "function") onClose();
       navigate("/home");
     } catch (e) {

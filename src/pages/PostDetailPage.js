@@ -72,6 +72,7 @@ const PostDetailPage = () => {
 
   // 게시글 조회
   useEffect(() => {
+    if (!loginUser) return;
     const fetchPost = async () => {
       try {
         const rsp = await AxiosApi.getPost(postId);

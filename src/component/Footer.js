@@ -11,7 +11,7 @@ const Footer = () => {
         <FooterLink>개인정보처리방침</FooterLink>
         <Divider>|</Divider>
         <span>
-          고객센터: <EmailLink>support@blind.com</EmailLink>
+          고객센터: <EmailLink>support@404.com</EmailLink>
         </span>
       </FooterInner>
     </FooterWrap>

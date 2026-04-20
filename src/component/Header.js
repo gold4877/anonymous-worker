@@ -52,7 +52,7 @@ const Header = ({ openAuth, searchValue = "", onSearch }) => {
             <UserName>{loginUser.name}님</UserName>
             {/* 인증 승인된 유저만 글쓰기 가능 */}
             {canWrite && (
-              <OutlineBtn onClick={() => navigate("/write")}>글쓰기</OutlineBtn>
+              <PrimaryBtn onClick={() => navigate("/write")}>글쓰기</PrimaryBtn>
             )}
             {approved && (
               <OutlineBtn
