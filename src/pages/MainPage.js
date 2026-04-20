@@ -63,6 +63,7 @@ function MainPage({ openAuth, searchValue = "" }) {
     if (section === "인기 게시물") {
       // ✅ likeCount 정렬 유지 (becamePopularAt 사용 안 함)
       posts = [...allPosts]
+        .filter((p) => p.likeCount >= 1)
         .sort((a, b) => b.likeCount - a.likeCount)
         .slice(0, 5);
     } else {
